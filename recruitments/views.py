@@ -13,6 +13,8 @@ from recruitments.serializers import (
 
 
 class RecruitmentView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
     def get(self, request):
         recruitments = Recruitments.objects.all()
         serializer = RecruitmentSerializer(recruitments, many=True)
@@ -23,8 +25,8 @@ class RecruitmentView(APIView):
         if serializer.is_valid():
             serializer.save(user=request.user)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)        
-        return Response(({"message":"동료 모집 작성 완료"}, serializer.data), status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(({"message":"동료 모집 작성 완료"}), status=status.HTTP_200_OK)
 
 
 class RecruitmentDetailView(APIView):
@@ -35,11 +37,11 @@ class RecruitmentDetailView(APIView):
 
     def put(self, request, recruitment_id):
         recruitments = get_object_or_404(Recruitments, id=recruitment_id)
-        serializer = RecruitmentEditSerializer(recruitments, data=request.data)
+        serializer = RecruitmentEditSerializer(recruitments, data=request.data, partial=True)
         if recruitments.user == request.user:
             if serializer.is_valid():
                 serializer.save(user=request.user)
-                return Response(({"message":"동료 모집 수정 완료"},serializer.data), status=status.HTTP_200_OK)
+                return Response(({"message":"동료 모집 수정 완료"}), status=status.HTTP_200_OK)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
