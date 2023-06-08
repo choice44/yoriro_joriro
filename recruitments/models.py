@@ -7,11 +7,11 @@ class Recruitments(models.Model):
     user = models.ForeignKey(User, verbose_name="유저", on_delete=models.CASCADE)
     title = models.CharField("제목", max_length=50)
     place = models.CharField("여행지", max_length=128)
-    cost = models.IntegerField("경비")
+    cost = models.PositiveIntegerField("경비")
     content = models.TextField("내용")
     departure = models.DateTimeField("출발일")
     arrival = models.DateTimeField("도착일")
-    participator_count = models.IntegerField("모집 인원", blank=False, validators=[MinValueValidator(1), MaxValueValidator(10)])
+    participator_count = models.PositiveIntegerField("모집 인원", blank=False, validators=[MinValueValidator(1), MaxValueValidator(10)])
     created_at = models.DateTimeField("작성일", auto_now_add=True)
     updated_at = models.DateTimeField("수정일", auto_now=True)
 
@@ -26,7 +26,6 @@ class Recruitments(models.Model):
     
     participant = models.ManyToManyField(User, verbose_name="참가자", blank=True, related_name="participant")
     
-
     def __str__(self):
         return self.title
 
