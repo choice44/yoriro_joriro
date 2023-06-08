@@ -9,6 +9,7 @@ from recruitments.serializers import (
     RecruitmentSerializer,
     RecruitmentDetailSerializer,
     RecruitmentEditSerializer,
+    RecruitmentJoinSerializer
 )
 
 
@@ -24,7 +25,7 @@ class RecruitmentView(APIView):
             serializer.save(user=request.user)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(({"message":"동료 모집 작성 완료"}), status=status.HTTP_200_OK)
+        return Response(({"message":"동료 모집 작성 완료"}), status=status.HTTP_201_CREATED)
 
 
 class RecruitmentDetailView(APIView):
@@ -58,7 +59,18 @@ class RecruitmentDetailView(APIView):
 
 class RecruitmentJoinView(APIView):
     def get(self, request, recruitment_id):
-        pass
+        recruitment = Applicant.objects.filter(recruitment_id=recruitment_id)
+        serializer = RecruitmentJoinSerializer(recruitment, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, recruitment_id):
-        pass
+        recruitment = get_object_or_404(Recruitments, id=recruitment_id)
+        serializer = RecruitmentJoinSerializer(data=request.data)
+        if Applicant.objects.filter(recruitment=recruitment, user=request.user).exists():
+            return Response({"message":"이미 지원하였습니다."}, status=status.HTTP_204_NO_CONTENT)
+        
+        if serializer.is_valid():
+            serializer.save(recruitment=recruitment, user=request.user)
+            return Response({"message":"동료 모집 신청 완료"}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
