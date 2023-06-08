@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.db.models import Avg
 
-from .models import Routes, Comment, Destinations, Places
+from .models import Routes, Comment, Destinations, Places, RouteRate
 
 # 여행지
 class DestinationSerializer(serializers.ModelSerializer):
@@ -14,6 +14,7 @@ class PlaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Places
         fields = ('content_id', 'content_type_id')
+        
 
 # 여행경로 전체 조회
 class RouteSerializer(serializers.ModelSerializer):

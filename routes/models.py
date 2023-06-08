@@ -28,13 +28,13 @@ class Places(models.Model):
     
 
 class RouteRate(models.Model):
-    route = models.ForeignKey(Routes, verbose_name="경로", on_delete=models.CASCADE, related_name="ratings")
-    user = models.ForeignKey(User, verbose_name="작성자", on_delete=models.CASCADE, related_name="route_ratings")
+    route = models.ForeignKey(Routes, verbose_name="경로", on_delete=models.CASCADE, related_name="rate")
+    user = models.ForeignKey(User, verbose_name="작성자", on_delete=models.CASCADE, related_name="route_rate")
     rate = models.IntegerField("평가")
     
     
 class Comment(models.Model):
-    user = models.ForeignKey(User, verbose_name="작성자", on_delete=models.CASCADE, related_name="comments")
+    user = models.ForeignKey(User, verbose_name="작성자", on_delete=models.CASCADE, related_name="user")
     route = models.ForeignKey(Routes, verbose_name="경로", on_delete=models.CASCADE, related_name="comments")
     content = models.TextField("내용")
     created_at = models.DateTimeField("작성시각", auto_now_add=True)

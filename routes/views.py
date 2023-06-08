@@ -3,7 +3,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from routes.models import Routes, Comment
+from routes.models import Routes, Comment, RouteRate
 from routes.serializers import (
     RouteSerializer,
     RouteCreateSerializer,
@@ -110,3 +110,29 @@ class CommentDetailView(APIView):
             return Response({"message": "댓글 삭제 완료!"}, status=status.HTTP_204_NO_CONTENT)
         else:
             return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+
+
+class RateView(APIView):
+    # 로그인한 사람만 평점을 줄 수 있음
+    permission_classes = [permissions.IsAuthenticated]
+
+    # 평점 주기
+    def post(self, request, route_id):
+        route = get_object_or_404(Routes, id=route_id)
+        rate = request.data.get('rate')
+
+        if not rate:
+            return Response({"message": "평점을 입력해주세요."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            rate = int(rate)
+            if rate < 0 or rate > 100:
+                return Response({"message": "평점은 0부터 100까지의 정수로 입력해주세요."}, status=status.HTTP_400_BAD_REQUEST)
+        except ValueError:
+            return Response({"message": "평점은 0부터 100까지의 정수로 입력해주세요."}, status=status.HTTP_400_BAD_REQUEST)
+
+        route_rate, created = RouteRate.objects.get_or_create(route=route, user=request.user)
+        route_rate.rate = rate
+        route_rate.save()
+
+        return Response({"message": "평점이 등록되었습니다."}, status=status.HTTP_200_OK)
