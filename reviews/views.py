@@ -58,7 +58,11 @@ class ReviewDetailView(APIView):
 
     def delete(self, request, review_id):
         review = get_object_or_404(Review, id=review_id)
-        pass
+        if review.user == request.user:
+            review.delete()
+            return Response({"message": "관광지 리뷰 삭제 완료!"}, status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
 
 # reviews/<int:review_id>/like/
