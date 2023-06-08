@@ -3,6 +3,9 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from reviews.models import Review
+from reviews.serializers import (
+    ReviewSerializer,
+)
 
 
 # reviews/
@@ -15,14 +18,18 @@ class ReviewView(APIView):
 
     def get(self, request):
         reviews = Review.objects.all().order_by("-created_at")
-        pass
+        serializer = ReviewSerializer(reviews, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     """
     리뷰 작성
     """
 
     def post(self, request):
-        pass
+        serializer = ReviewSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=request.user)
+        return Response(({"message": "관광지 리뷰 작성 완료!"}, serializer.data), status=status.HTTP_201_CREATED)
 
 
 # reviews/<int:review_id>/
