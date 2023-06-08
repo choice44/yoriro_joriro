@@ -4,6 +4,15 @@ from rest_framework import serializers
 from users.models import User
 
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    followings = serializers.StringRelatedField(many=True)
+    followers = serializers.StringRelatedField(many=True)
+
+    class Meta:
+        model = User
+        fields = ("id", "email", "nickname", "followings", "followers")
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -24,7 +33,7 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+class UserTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
