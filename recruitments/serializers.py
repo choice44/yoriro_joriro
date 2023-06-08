@@ -12,6 +12,9 @@ class RecruitmentSerializer(serializers.ModelSerializer):
 
     def get_user(self, obj):
         return {"id":obj.user.id, "nickname":obj.user.nickname}
+    
+    def create(self, instance, validated_data):
+        pass
         
 
 class RecruitmentDetailSerializer(serializers.ModelSerializer):
@@ -30,6 +33,7 @@ class RecruitmentDetailSerializer(serializers.ModelSerializer):
     def get_participant(self, obj):
         participant_data = obj.participant.values("id", 'nickname')
         return participant_data
+
 
 class RecruitmentEditSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()

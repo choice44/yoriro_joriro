@@ -88,27 +88,20 @@ class ApplicantAcceptenceView(APIView):
             applicant.acceptence = True
             applicant.save()
             if applicant.user in recruitment.participant.all():
-                return Response({"message":"이미 수락하였습니다."}, status=status.HTTP_204_NO_CONTENT)                     
+                return Response({"message":"이미 수락하였습니다."}, status=status.HTTP_204_NO_CONTENT)
             else:            
                 recruitment.participant.add(applicant.user)
                 return Response({"message":"참가 수락 완료"}, status=status.HTTP_200_OK)
-                
         else:
             return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
 
-    def delete(self, request, recruitment_id):
-        pass
-
-
-
-    # def put(self, request, recruitment_id):
-    #     applicant = get_object_or_404(Applicant, recruitment_id=recruitment_id, user=request.user)
-    #     serializer = RecruitmentJoinSerializer(data=request.data)
-    #     if applicant.user == request.user:
-    #         if serializer.is_valid():
-    #             serializer.save(user=request.user)
-    #             return Response(({"message":"동료 모집 수정 완료"}), status=status.HTTP_200_OK)
-    #         else:
-    #             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    #     else:
-    #         return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
+    def delete(self, request, recruitment_id, applicant_id):
+        recruitment = get_object_or_404(Recruitments, id=recruitment_id)
+        if  recruitment.user == request.user:            
+            applicant = get_object_or_404(Applicant, id=applicant_id)
+            applicant.delete()
+            return Response({"message":"참가 거절 완료"}, status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
+        
+        
