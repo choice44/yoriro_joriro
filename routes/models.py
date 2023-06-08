@@ -30,7 +30,7 @@ class Places(models.Model):
 class RouteRate(models.Model):
     route = models.ForeignKey(Routes, verbose_name="경로", on_delete=models.CASCADE, related_name="ratings")
     user = models.ForeignKey(User, verbose_name="작성자", on_delete=models.CASCADE, related_name="route_ratings")
-    rating = models.IntegerField("평가")
+    rate = models.IntegerField("평가")
     
     
 class Comment(models.Model):
