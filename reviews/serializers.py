@@ -2,7 +2,7 @@ from rest_framework import serializers
 from reviews.models import Review
 
 
-# 리뷰 전체 목록 조회 및 리뷰 작성
+# 리뷰 전체 목록 조회, 리뷰 상세 조회, 리뷰 작성
 class ReviewSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     created_at = serializers.SerializerMethodField()
@@ -29,3 +29,11 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = "__all__"
+        
+
+# 리뷰 수정
+class ReviewUpdateSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Review
+        fields = ("content", "rate", "visited_date", "image")

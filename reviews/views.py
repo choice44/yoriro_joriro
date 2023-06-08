@@ -5,6 +5,7 @@ from rest_framework import status, permissions
 from reviews.models import Review
 from reviews.serializers import (
     ReviewSerializer,
+    ReviewUpdateSerializer
 )
 
 
@@ -42,7 +43,8 @@ class ReviewDetailView(APIView):
 
     def get(self, request, review_id):
         review = get_object_or_404(Review, id=review_id)
-        pass
+        serializer = ReviewSerializer(review)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     """
     리뷰 수정하기
@@ -50,7 +52,13 @@ class ReviewDetailView(APIView):
 
     def put(self, request, review_id):
         review = get_object_or_404(Review, id=review_id)
-        pass
+        serializer = ReviewUpdateSerializer(review, data=request.data)
+        if review.user == request.user:
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=request.user)
+            return Response(({"message": "관광지 리뷰 수정 완료!"},serializer.data), status=status.HTTP_200_OK)
+        else:
+            return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
     """
     리뷰 삭제하기
