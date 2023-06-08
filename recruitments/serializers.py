@@ -12,11 +12,11 @@ class RecruitmentSerializer(serializers.ModelSerializer):
 
     def get_user(self, obj):
         return {"id":obj.user.id, "nickname":obj.user.nickname}
-    
         
 
 class RecruitmentDetailSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()    
+    participant = serializers.SerializerMethodField()    
 
     class Meta:
         model = Recruitments
@@ -27,6 +27,9 @@ class RecruitmentDetailSerializer(serializers.ModelSerializer):
         # return {"id":obj.user.id, "nickname":obj.user.email, "age":obj.user.age, "gender":obj.user.gender}
         # user모델에 age, gender가 없어서 잠시 주석처리 해놓았습니다.
         
+    def get_participant(self, obj):
+        participant_data = obj.participant.values("id", 'nickname')
+        return participant_data
 
 class RecruitmentEditSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
