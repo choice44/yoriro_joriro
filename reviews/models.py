@@ -16,6 +16,7 @@ class Review(models.Model):
     content_type_id = models.PositiveSmallIntegerField("관광지 유형 코드")
     content_id = models.PositiveBigIntegerField("관광지 코드")
     rate = models.PositiveSmallIntegerField("평점", choices=RATE_CHOICES, default=1)
+    title = models.CharField("제목", max_length=150)
     content = models.TextField("리뷰")
     visited_date = models.DateField("방문일")
     created_at = models.DateTimeField("작성시각", auto_now_add=True)
@@ -25,4 +26,4 @@ class Review(models.Model):
     
     
     def __str__(self):
-        return self.content
+        return self.title
