@@ -30,6 +30,8 @@ class RecruitmentView(APIView):
 
 
 class RecruitmentDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
     def get(self, request, recruitment_id):
         recruitments = get_object_or_404(Recruitments, id=recruitment_id)
         serializer = RecruitmentDetailSerializer(recruitments)

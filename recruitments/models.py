@@ -16,12 +16,12 @@ class Recruitments(models.Model):
     updated_at = models.DateTimeField("수정일", auto_now=True)
 
     IS_COMPLETE_CHOICE = [
-        ("recruiting", "모집중"),
-        ("recruit done", "모집완료"),
-        ("traveling", "여행중"),
-        ("travel done", "여행완료"),
+        (0, "모집중"),
+        (1, "모집완료"),
+        (2, "여행중"),
+        (3, "여행완료"),
     ]
-    is_complete = models.CharField("모집 완료 여부", max_length=20, choices=IS_COMPLETE_CHOICE, default="recruiting")
+    is_complete = models.CharField("모집 완료 여부", max_length=20, choices=IS_COMPLETE_CHOICE, default=0)
     image = models.ImageField("이미지", upload_to="recruitments/%Y/%m/", blank=True)
     
     participant = models.ManyToManyField(User, verbose_name="참가자", blank=True, related_name="participant")
