@@ -13,8 +13,6 @@ from recruitments.serializers import (
 
 
 class RecruitmentView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
     def get(self, request):
         recruitments = Recruitments.objects.all()
         serializer = RecruitmentSerializer(recruitments, many=True)
