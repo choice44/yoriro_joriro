@@ -58,6 +58,8 @@ class RecruitmentDetailView(APIView):
 
 
 class RecruitmentJoinView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
     def get(self, request, recruitment_id):
         recruitment = Applicant.objects.filter(recruitment_id=recruitment_id)
         serializer = RecruitmentJoinSerializer(recruitment, many=True)
