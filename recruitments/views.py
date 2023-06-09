@@ -79,30 +79,69 @@ class RecruitmentJoinView(APIView):
             return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
 
 
-class ApplicantAcceptenceView(APIView):
+class ApplicantAcceptView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def post(self, request, recruitment_id, applicant_id):
+    # 고민을 정말 많이 했는데 직접 수정하는 부분을 입력 받는게 아니긴 한데 수정하는 부분이 있으어서 put로 했습니다만 아직 정확하게 모르겠네요...
+    def put(self, request, recruitment_id, applicant_id):
         recruitment = get_object_or_404(Recruitments, id=recruitment_id)
         if  recruitment.user == request.user:
             applicant = get_object_or_404(Applicant, id=applicant_id)
-            applicant.acceptence = True
             applicant.save()
             if applicant.user in recruitment.participant.all():
                 return Response({"message":"이미 수락하였습니다."}, status=status.HTTP_204_NO_CONTENT)
             else:            
+                applicant.acceptence=2
+                applicant.save()
                 recruitment.participant.add(applicant.user)
                 return Response({"message":"참가 수락 완료"}, status=status.HTTP_200_OK)
         else:
             return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
 
-    def delete(self, request, recruitment_id, applicant_id):
+
+class ApplicantRejectView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request, recruitment_id, applicant_id):
         recruitment = get_object_or_404(Recruitments, id=recruitment_id)
-        if  recruitment.user == request.user:            
+        if  recruitment.user == request.user:
             applicant = get_object_or_404(Applicant, id=applicant_id)
-            applicant.delete()
-            return Response({"message":"참가 거절 완료"}, status=status.HTTP_204_NO_CONTENT)
+            applicant.save()
+            if applicant.user in recruitment.participant.all():
+                return Response({"message":"이미 수락하였습니다."}, status=status.HTTP_204_NO_CONTENT)
+            else:            
+                applicant.acceptence=1
+                applicant.save()
+                return Response({"message":"참가 거절 완료"}, status=status.HTTP_200_OK)
         else:
             return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
+
+
+# class ApplicantAcceptenceView(APIView):
+#     permission_classes = [permissions.IsAuthenticated]
+
+#     def post(self, request, recruitment_id, applicant_id):
+#         recruitment = get_object_or_404(Recruitments, id=recruitment_id)
+#         if  recruitment.user == request.user:
+#             applicant = get_object_or_404(Applicant, id=applicant_id)
+#             applicant.save()
+#             if applicant.user in recruitment.participant.all():
+#                 return Response({"message":"이미 수락하였습니다."}, status=status.HTTP_204_NO_CONTENT)
+#             else:            
+#                 applicant.acceptence = True
+#                 recruitment.participant.add(applicant.user)
+#                 applicant.delete()
+#                 return Response({"message":"참가 수락 완료"}, status=status.HTTP_200_OK)
+#         else:
+#             return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
+
+#     def delete(self, request, recruitment_id, applicant_id):
+#         recruitment = get_object_or_404(Recruitments, id=recruitment_id)
+#         if  recruitment.user == request.user:            
+#             applicant = get_object_or_404(Applicant, id=applicant_id)
+#             applicant.delete()
+#             return Response({"message":"참가 거절 완료"}, status=status.HTTP_204_NO_CONTENT)
+#         else:
+#             return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
         
         

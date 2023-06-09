@@ -35,7 +35,14 @@ class Applicant(models.Model):
     user = models.ForeignKey(User, verbose_name="신청자", blank=True, on_delete=models.CASCADE)
     recruitment = models.ForeignKey(Recruitments, verbose_name="동료 모집", on_delete=models.CASCADE)
     appeal = models.CharField("포부", max_length=128)
-    acceptence = models.BooleanField("합격 여부", default=False)
+    # acceptence = models.BooleanField("합격 여부", default=False)
+    
+    ACCEPTENCE_CHOICE = [
+        (0, "대기중"),
+        (1, "거절"),
+        (2, "수락"),
+    ]
+    acceptence = models.CharField("합격 여부", max_length=5, choices=ACCEPTENCE_CHOICE, default=0)
 
     def __str__(self):
         return self.appeal
