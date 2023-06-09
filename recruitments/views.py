@@ -3,6 +3,8 @@ from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 
+from datetime import datetime
+
 from recruitments.models import Recruitments, Applicant
 
 from recruitments.serializers import (
@@ -16,6 +18,16 @@ from recruitments.serializers import (
 class RecruitmentView(APIView):
     def get(self, request):
         recruitment = Recruitments.objects.all()
+        
+        now_time = datetime.now()
+        for obj in recruitment:
+            if now_time >= obj.arrival:
+                obj.is_complete = 3
+                obj.save()
+            elif now_time >= obj.departure:
+                obj.is_complete = 2
+                obj.save()
+
         serializer = RecruitmentSerializer(recruitment, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -35,6 +47,16 @@ class RecruitmentDetailView(APIView):
     def get(self, request, recruitment_id):
         recruitment = get_object_or_404(Recruitments, id=recruitment_id)
         serializer = RecruitmentDetailSerializer(recruitment)
+        
+        now_time = datetime.now()
+
+        if now_time >= recruitment.arrival:
+            recruitment.is_complete = 3
+            recruitment.save()
+        elif now_time >= recruitment.departure:
+            recruitment.is_complete = 2
+            recruitment.save()
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, recruitment_id):
@@ -68,12 +90,10 @@ class RecruitmentJoinView(APIView):
 
     def post(self, request, recruitment_id):
         recruitment = get_object_or_404(Recruitments, id=recruitment_id)
-        print(recruitment.is_complete, recruitment.participant.count())
+        serializer = RecruitmentJoinSerializer(data=request.data)        
 
-        if recruitment.is_complete != '0':
+        if recruitment.is_complete != 0:
             return Response({"message":"마감된 지원입니다."}, status=status.HTTP_204_NO_CONTENT)
-        
-        serializer = RecruitmentJoinSerializer(data=request.data)
         
         if Applicant.objects.filter(recruitment=recruitment, user=request.user).exists() or request.user in recruitment.participant.all():
             return Response({"message":"이미 지원하였습니다."}, status=status.HTTP_204_NO_CONTENT)
@@ -93,12 +113,11 @@ class ApplicantAcceptView(APIView):
         recruitment = get_object_or_404(Recruitments, id=recruitment_id)
         if recruitment.user == request.user:
             applicant = get_object_or_404(Applicant, id=applicant_id)
-            applicant.save()
             
             if applicant.acceptence != 0:
                 return Response({"message":"이전에 처리한 지원자입니다."}, status=status.HTTP_204_NO_CONTENT)
 
-            if recruitment.is_complete != '0':
+            if recruitment.is_complete != 0:
                 return Response({"message":"더이상 수락할수 없습니다."}, status=status.HTTP_204_NO_CONTENT)
 
             if applicant.user in recruitment.participant.all():
@@ -121,12 +140,9 @@ class ApplicantRejectView(APIView):
 
     def put(self, request, recruitment_id, applicant_id):
         recruitment = get_object_or_404(Recruitments, id=recruitment_id)
-
         
-        if  recruitment.user == request.user:
-            
+        if  recruitment.user == request.user:            
             applicant = get_object_or_404(Applicant, id=applicant_id)
-            applicant.save()
             
             if applicant.acceptence != 0:
                 return Response({"message":"이전에 처리한 지원자입니다."}, status=status.HTTP_204_NO_CONTENT)
@@ -139,7 +155,6 @@ class ApplicantRejectView(APIView):
                 return Response({"message":"참가 거절 완료"}, status=status.HTTP_200_OK)
         else:
             return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
-
 
 
 # class ApplicantAcceptenceView(APIView):
