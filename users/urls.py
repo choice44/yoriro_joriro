@@ -6,13 +6,13 @@ from rest_framework_simplejwt.views import (
 )
 
 urlpatterns = [
-    path("signup/", views.UserView.as_view(), name="user_view"),
+    path("signup/", views.SignupView.as_view(), name="user_view"),
     path(
         "login/",
-        views.UserTokenObtainPairView.as_view(),
+        views.LoginView.as_view(),
         name="token_obtain_pair",
     ),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("follow/<int:user_id>/", views.FollowView.as_view(), name="follow_view"),
-    path("<int:user_id>/", views.ProfileView.as_view(), name="profile_view"),
+    path("mypage/<int:user_id>/", views.MyPageView.as_view(), name="mypage_view"),
 ]

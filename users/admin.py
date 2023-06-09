@@ -9,10 +9,8 @@ from users.models import User
 
 
 class UserCreationForm(forms.ModelForm):
-    password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
-    password2 = forms.CharField(
-        label="Password confirmation", widget=forms.PasswordInput
-    )
+    password1 = forms.CharField(label="비밀번호", widget=forms.PasswordInput)
+    password2 = forms.CharField(label="비밀번호 확인", widget=forms.PasswordInput)
 
     class Meta:
         model = User
@@ -52,7 +50,20 @@ class UserAdmin(BaseUserAdmin):
     list_display = ["id", "email", "is_admin"]
     list_filter = ["is_admin"]
     fieldsets = [
-        (None, {"fields": ["email", "password", "followings"]}),
+        (
+            None,
+            {
+                "fields": [
+                    "email",
+                    "nickname",
+                    "image",
+                    "age",
+                    "gender",
+                    "bio",
+                    "followings",
+                ]
+            },
+        ),
         ("Permissions", {"fields": ["is_admin"]}),
     ]
 
