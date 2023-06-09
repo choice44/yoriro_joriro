@@ -121,6 +121,7 @@ class RateView(APIView):
         route = get_object_or_404(Routes, id=route_id)
         rate = request.data.get('rate')
 
+        # rate가 null값인 경우
         if not rate:
             return Response({"message": "평점을 입력해주세요."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -131,8 +132,14 @@ class RateView(APIView):
         except ValueError:
             return Response({"message": "평점은 0부터 100까지의 정수로 입력해주세요."}, status=status.HTTP_400_BAD_REQUEST)
 
+        # route_rate는 새로 생성했거나 사져온 RouteRate 객체
+        # created는 새로 생성된 객체인지 나타내는 bool값
         route_rate, created = RouteRate.objects.get_or_create(route=route, user=request.user)
         route_rate.rate = rate
         route_rate.save()
 
-        return Response({"message": "평점이 등록되었습니다."}, status=status.HTTP_200_OK)
+        # created의 불린값을 이용해 문구를 다르게 만들 수 있다.
+        if created:
+            return Response({"message": f"{rate}점이 등록되었습니다."}, status=status.HTTP_200_OK)
+        else:
+            return Response({f"message": f"{rate}점으로 업데이트되었습니다."}, status=status.HTTP_200_OK)
