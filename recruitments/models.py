@@ -11,7 +11,7 @@ class Recruitments(models.Model):
     content = models.TextField("내용")
     departure = models.DateTimeField("출발일")
     arrival = models.DateTimeField("도착일")
-    participator_count = models.PositiveIntegerField("모집 인원", blank=False, validators=[MinValueValidator(1), MaxValueValidator(10)])
+    participator_count = models.PositiveIntegerField("모집 인원", blank=False, validators=[MinValueValidator(2), MaxValueValidator(10)])
     # 적절한 이름 찾아서 participant로 통일시키면서 participant_count말고 다른 이름 생각해봐라!
     created_at = models.DateTimeField("작성일", auto_now_add=True)
     updated_at = models.DateTimeField("수정일", auto_now=True)
@@ -36,7 +36,7 @@ class Applicant(models.Model):
     recruitment = models.ForeignKey(Recruitments, verbose_name="동료 모집", on_delete=models.CASCADE)
     appeal = models.CharField("포부", max_length=128)
     # acceptence = models.BooleanField("합격 여부", default=False)
-    
+
     ACCEPTENCE_CHOICE = [
         (0, "대기중"),
         (1, "거절"),

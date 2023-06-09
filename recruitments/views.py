@@ -68,7 +68,13 @@ class RecruitmentJoinView(APIView):
 
     def post(self, request, recruitment_id):
         recruitment = get_object_or_404(Recruitments, id=recruitment_id)
+        print(recruitment.is_complete, recruitment.participant.count())
+
+        if recruitment.is_complete != '0':
+            return Response({"message":"마감된 지원입니다."}, status=status.HTTP_204_NO_CONTENT)
+        
         serializer = RecruitmentJoinSerializer(data=request.data)
+        
         if Applicant.objects.filter(recruitment=recruitment, user=request.user).exists() or request.user in recruitment.participant.all():
             return Response({"message":"이미 지원하였습니다."}, status=status.HTTP_204_NO_CONTENT)
         
@@ -77,7 +83,7 @@ class RecruitmentJoinView(APIView):
             return Response({"message":"참가 신청 완료"}, status=status.HTTP_201_CREATED)
         else:
             return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
-
+            
 
 class ApplicantAcceptView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -85,15 +91,23 @@ class ApplicantAcceptView(APIView):
     # 고민을 정말 많이 했는데 직접 수정하는 부분을 입력 받는게 아니긴 한데 수정하는 부분이 있으어서 put로 했습니다만 아직 정확하게 모르겠네요...
     def put(self, request, recruitment_id, applicant_id):
         recruitment = get_object_or_404(Recruitments, id=recruitment_id)
-        if  recruitment.user == request.user:
+        if recruitment.user == request.user:
             applicant = get_object_or_404(Applicant, id=applicant_id)
             applicant.save()
+            
+            if recruitment.is_complete != '0':
+                return Response({"message":"더이상 수락할수 없습니다."}, status=status.HTTP_204_NO_CONTENT)
+
             if applicant.user in recruitment.participant.all():
                 return Response({"message":"이미 수락하였습니다."}, status=status.HTTP_204_NO_CONTENT)
             else:            
                 applicant.acceptence=2
                 applicant.save()
                 recruitment.participant.add(applicant.user)
+                
+                if  recruitment.participant.count()>=recruitment.participator_count:
+                    recruitment.is_complete=1
+                    recruitment.save()
                 return Response({"message":"참가 수락 완료"}, status=status.HTTP_200_OK)
         else:
             return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
@@ -115,6 +129,7 @@ class ApplicantRejectView(APIView):
                 return Response({"message":"참가 거절 완료"}, status=status.HTTP_200_OK)
         else:
             return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
+
 
 
 # class ApplicantAcceptenceView(APIView):
