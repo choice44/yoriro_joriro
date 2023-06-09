@@ -95,6 +95,9 @@ class ApplicantAcceptView(APIView):
             applicant = get_object_or_404(Applicant, id=applicant_id)
             applicant.save()
             
+            if applicant.acceptence != 0:
+                return Response({"message":"이전에 처리한 지원자입니다."}, status=status.HTTP_204_NO_CONTENT)
+
             if recruitment.is_complete != '0':
                 return Response({"message":"더이상 수락할수 없습니다."}, status=status.HTTP_204_NO_CONTENT)
 
@@ -118,9 +121,16 @@ class ApplicantRejectView(APIView):
 
     def put(self, request, recruitment_id, applicant_id):
         recruitment = get_object_or_404(Recruitments, id=recruitment_id)
+
+        
         if  recruitment.user == request.user:
+            
             applicant = get_object_or_404(Applicant, id=applicant_id)
             applicant.save()
+            
+            if applicant.acceptence != 0:
+                return Response({"message":"이전에 처리한 지원자입니다."}, status=status.HTTP_204_NO_CONTENT)
+            
             if applicant.user in recruitment.participant.all():
                 return Response({"message":"이미 수락하였습니다."}, status=status.HTTP_204_NO_CONTENT)
             else:            
