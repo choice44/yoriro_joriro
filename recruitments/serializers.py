@@ -12,9 +12,6 @@ class RecruitmentSerializer(serializers.ModelSerializer):
 
     def get_user(self, obj):
         return {"id":obj.user.id, "nickname":obj.user.nickname}
-    
-    def create(self, instance, validated_data):
-        pass
         
 
 class RecruitmentDetailSerializer(serializers.ModelSerializer):

@@ -22,7 +22,8 @@ class RecruitmentView(APIView):
     def post(self, request):
         serializer = RecruitmentSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(user=request.user)
+            recruitment = serializer.save(user=request.user)
+            recruitment.participant.add(request.user)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(({"message":"동료 모집 작성 완료"}), status=status.HTTP_201_CREATED)
@@ -68,7 +69,7 @@ class RecruitmentJoinView(APIView):
     def post(self, request, recruitment_id):
         recruitment = get_object_or_404(Recruitments, id=recruitment_id)
         serializer = RecruitmentJoinSerializer(data=request.data)
-        if Applicant.objects.filter(recruitment=recruitment, user=request.user).exists():
+        if Applicant.objects.filter(recruitment=recruitment, user=request.user).exists() or request.user in recruitment.participant.all():
             return Response({"message":"이미 지원하였습니다."}, status=status.HTTP_204_NO_CONTENT)
         
         if serializer.is_valid():
