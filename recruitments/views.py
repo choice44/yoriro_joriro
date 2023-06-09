@@ -18,7 +18,7 @@ from recruitments.serializers import (
 class RecruitmentView(APIView):
     def get(self, request):
         recruitment = Recruitments.objects.all()
-        
+
         now_time = datetime.now()
         for obj in recruitment:
             if now_time >= obj.arrival:

@@ -22,7 +22,8 @@ class Recruitments(models.Model):
         (2, "여행중"),
         (3, "여행완료"),
     ]
-    is_complete = models.CharField("모집 완료 여부", max_length=20, choices=IS_COMPLETE_CHOICE, default=0)
+    # is_complete = models.CharField("모집 완료 여부", max_length=20, choices=IS_COMPLETE_CHOICE, default=0)
+    is_complete = models.IntegerField("모집 완료 여부", choices=IS_COMPLETE_CHOICE, default=0)
     image = models.ImageField("이미지", upload_to="recruitments/%Y/%m/", blank=True)
     
     participant = models.ManyToManyField(User, verbose_name="참가자", blank=True, related_name="participant")
@@ -42,7 +43,8 @@ class Applicant(models.Model):
         (1, "거절"),
         (2, "수락"),
     ]
-    acceptence = models.CharField("합격 여부", max_length=5, choices=ACCEPTENCE_CHOICE, default=0)
+    # acceptence = models.CharField("합격 여부", max_length=5, choices=ACCEPTENCE_CHOICE, default=0)
+    acceptence = models.IntegerField("합격 여부", choices=ACCEPTENCE_CHOICE, default=0)
 
     def __str__(self):
         return self.appeal
