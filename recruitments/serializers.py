@@ -49,7 +49,7 @@ class RecruitmentJoinSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Applicant
-        fields = ("user", "appeal", "acceptence", )
+        fields = ("id", "user", "appeal", "acceptence",)
 
     def get_user(self, obj):
         return {"id":obj.user.id, "nickname":obj.user.nickname}
