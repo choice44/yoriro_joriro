@@ -108,11 +108,25 @@ class RecruitmentJoinView(APIView):
             
 
 class ApplicantDetailView(APIView):
-    def put(self, request, recruitment_id):
-        pass
+    permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request, applicant_id):
+        applicant = get_object_or_404(Applicant, id=applicant_id)
+        serializer = RecruitmentJoinSerializer(applicant, data=request.data)
+        if applicant.user == request.user:
+            if serializer.is_valid():
+                serializer.save(user=request.user)
+                return Response({"message":"지원 수정 완료"}, status=status.HTTP_200_OK)
+        else:
+            return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
     
-    def put(self, request, recruitment_id):
-        pass
+    def delete(self, request, applicant_id):
+        applicant = get_object_or_404(Applicant, id=applicant_id)
+        if applicant.user == request.user:
+            applicant.delete()    
+            return Response({"message":"지원 삭제 완료"}, status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
 
 
 class ApplicantAcceptView(APIView):
