@@ -107,21 +107,25 @@ class RecruitmentJoinView(APIView):
             return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
             
 
+class ApplicantDetailView(APIView):
+    def put(self, request, recruitment_id):
+        pass
+    
+    def put(self, request, recruitment_id):
+        pass
+
+
 class ApplicantAcceptView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    # 고민을 정말 많이 했는데 직접 수정하는 부분을 입력 받는게 아니긴 한데 수정하는 부분이 있으어서 put로 했습니다만 아직 정확하게 모르겠네요...
-    def put(self, request, recruitment_id, applicant_id):
-        recruitment = get_object_or_404(Recruitments, id=recruitment_id)
-        if recruitment.user == request.user:
-            applicant = get_object_or_404(Applicant, id=applicant_id)
-            
+    def put(self, request, applicant_id):
+        applicant = get_object_or_404(Applicant, id=applicant_id)
+        recruitment = get_object_or_404(Recruitments, id=applicant.recruitment_id)
+        
+        if recruitment.user == request.user:            
             if applicant.acceptence != 0:
                 return Response({"message":"이전에 처리한 지원자입니다."}, status=status.HTTP_204_NO_CONTENT)
             
-            if applicant.recruitment_id != recruitment_id:
-                return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
-
             if recruitment.is_complete != 0:
                 return Response({"message":"더이상 수락할수 없습니다."}, status=status.HTTP_204_NO_CONTENT)
 
@@ -143,15 +147,11 @@ class ApplicantAcceptView(APIView):
 class ApplicantRejectView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def put(self, request, recruitment_id, applicant_id):
-        recruitment = get_object_or_404(Recruitments, id=recruitment_id)
+    def put(self, request, applicant_id):
+        applicant = get_object_or_404(Applicant, id=applicant_id)
+        recruitment = get_object_or_404(Recruitments, id=applicant.recruitment_id)
         
         if  recruitment.user == request.user:            
-            applicant = get_object_or_404(Applicant, id=applicant_id)
-
-            if applicant.recruitment_id != recruitment_id:
-                return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
-            
             if applicant.acceptence != 0:
                 return Response({"message":"이전에 처리한 지원자입니다."}, status=status.HTTP_204_NO_CONTENT)            
         
