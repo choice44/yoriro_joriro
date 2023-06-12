@@ -6,6 +6,8 @@ from rest_framework.generics import get_object_or_404
 from datetime import datetime
 
 from recruitments.models import Recruitments, Applicant
+from rest_framework.pagination import PageNumberPagination
+from rest_framework import viewsets, generics
 
 from recruitments.serializers import (
     RecruitmentSerializer,
@@ -157,31 +159,8 @@ class ApplicantRejectView(APIView):
             return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
 
 
-# class ApplicantAcceptenceView(APIView):
-#     permission_classes = [permissions.IsAuthenticated]
+class RecruitmentsViewSet(viewsets.ModelViewSet):
+    queryset = Recruitments.objects.all()
+    serializer_class = RecruitmentSerializer
+    pagination_class = PageNumberPagination
 
-#     def post(self, request, recruitment_id, applicant_id):
-#         recruitment = get_object_or_404(Recruitments, id=recruitment_id)
-#         if  recruitment.user == request.user:
-#             applicant = get_object_or_404(Applicant, id=applicant_id)
-#             applicant.save()
-#             if applicant.user in recruitment.participant.all():
-#                 return Response({"message":"이미 수락하였습니다."}, status=status.HTTP_204_NO_CONTENT)
-#             else:            
-#                 applicant.acceptence = True
-#                 recruitment.participant.add(applicant.user)
-#                 applicant.delete()
-#                 return Response({"message":"참가 수락 완료"}, status=status.HTTP_200_OK)
-#         else:
-#             return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
-
-#     def delete(self, request, recruitment_id, applicant_id):
-#         recruitment = get_object_or_404(Recruitments, id=recruitment_id)
-#         if  recruitment.user == request.user:            
-#             applicant = get_object_or_404(Applicant, id=applicant_id)
-#             applicant.delete()
-#             return Response({"message":"참가 거절 완료"}, status=status.HTTP_204_NO_CONTENT)
-#         else:
-#             return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
-        
-        
