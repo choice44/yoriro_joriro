@@ -118,6 +118,9 @@ class ApplicantAcceptView(APIView):
             
             if applicant.acceptence != 0:
                 return Response({"message":"이전에 처리한 지원자입니다."}, status=status.HTTP_204_NO_CONTENT)
+            
+            if applicant.recruitment_id != recruitment_id:
+                return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
 
             if recruitment.is_complete != 0:
                 return Response({"message":"더이상 수락할수 없습니다."}, status=status.HTTP_204_NO_CONTENT)
@@ -129,7 +132,7 @@ class ApplicantAcceptView(APIView):
                 applicant.save()
                 recruitment.participant.add(applicant.user)
                 
-                if  recruitment.participant.count()>=recruitment.participator_count:
+                if  recruitment.participant.count()>=recruitment.participant_max:
                     recruitment.is_complete=1
                     recruitment.save()
                 return Response({"message":"참가 수락 완료"}, status=status.HTTP_200_OK)
@@ -145,16 +148,16 @@ class ApplicantRejectView(APIView):
         
         if  recruitment.user == request.user:            
             applicant = get_object_or_404(Applicant, id=applicant_id)
+
+            if applicant.recruitment_id != recruitment_id:
+                return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
             
             if applicant.acceptence != 0:
-                return Response({"message":"이전에 처리한 지원자입니다."}, status=status.HTTP_204_NO_CONTENT)
-            
-            if applicant.user in recruitment.participant.all():
-                return Response({"message":"이미 수락하였습니다."}, status=status.HTTP_204_NO_CONTENT)
-            else:            
-                applicant.acceptence=1
-                applicant.save()
-                return Response({"message":"참가 거절 완료"}, status=status.HTTP_200_OK)
+                return Response({"message":"이전에 처리한 지원자입니다."}, status=status.HTTP_204_NO_CONTENT)            
+        
+            applicant.acceptence=1
+            applicant.save()
+            return Response({"message":"참가 거절 완료"}, status=status.HTTP_200_OK)
         else:
             return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
 
