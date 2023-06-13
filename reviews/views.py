@@ -1,12 +1,24 @@
 from rest_framework.views import APIView
-from rest_framework.generics import get_object_or_404
+from rest_framework.generics import get_object_or_404, ListAPIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
+from django_filters.rest_framework import DjangoFilterBackend
 from reviews.models import Review
 from reviews.serializers import (
     ReviewSerializer,
     ReviewUpdateSerializer
 )
+
+
+# reviews/filter/
+class ReviewTypeView(ListAPIView):
+    """
+    타입/지역별 리뷰 목록 조회
+    """
+    queryset = Review.objects.all().order_by("-created_at")
+    serializer_class = ReviewSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields  = ["content_type_id", "area_code", "sigungu_code"]
 
 
 # reviews/
