@@ -26,7 +26,7 @@ class RecruitmentView(generics.ListAPIView):
     serializer_class = RecruitmentSerializer
     pagination_class = RecruitmentsSetPagination
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
         recruitment = Recruitments.objects.all()
 
         now_time = datetime.now()
@@ -38,7 +38,7 @@ class RecruitmentView(generics.ListAPIView):
                 obj.is_complete = 2
                 obj.save()
 
-        response = self.list(request, *args, **kwargs)
+        response = self.list(request)
         return Response(response.data, status=status.HTTP_200_OK)
 
     def post(self, request):
