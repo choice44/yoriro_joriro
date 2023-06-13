@@ -7,7 +7,7 @@ from datetime import datetime
 
 from recruitments.models import Recruitments, Applicant
 from rest_framework.pagination import PageNumberPagination
-from rest_framework import viewsets, generics
+from rest_framework import viewsets
 
 from recruitments.serializers import (
     RecruitmentSerializer,
@@ -17,7 +17,15 @@ from recruitments.serializers import (
 )
 
 
-class RecruitmentView(APIView):
+class RecruitmentsSetPagination(PageNumberPagination):
+    page_size = 5
+
+
+class RecruitmentViewSet(viewsets.ModelViewSet):
+    queryset = Recruitments.objects.all()
+    serializer_class = RecruitmentSerializer
+    pagination_class = RecruitmentsSetPagination
+
     def get(self, request):
         recruitment = Recruitments.objects.all()
 
@@ -41,7 +49,7 @@ class RecruitmentView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(({"message":"동료 모집 작성 완료"}), status=status.HTTP_201_CREATED)
-
+    
 
 class RecruitmentDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -174,10 +182,4 @@ class ApplicantRejectView(APIView):
             return Response({"message":"참가 거절 완료"}, status=status.HTTP_200_OK)
         else:
             return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
-
-
-class RecruitmentsViewSet(viewsets.ModelViewSet):
-    queryset = Recruitments.objects.all()
-    serializer_class = RecruitmentSerializer
-    pagination_class = PageNumberPagination
 
