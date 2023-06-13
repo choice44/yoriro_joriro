@@ -41,7 +41,7 @@ class Route(models.Model):
     image = models.ImageField("이미지", upload_to="Routes/%Y/%m/", blank=True)
     cost = models.IntegerField("경비")
     duration = models.CharField("기간", max_length=50)
-    routespot = models.ManyToManyField(Spot, verbose_name="루트스팟", blank=True, related_name='routes')
+    spot = models.ManyToManyField(Spot, verbose_name="루트스팟", blank=True, related_name='routes')
     
     def __str__(self):
         return self.title

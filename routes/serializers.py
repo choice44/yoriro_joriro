@@ -70,13 +70,13 @@ class RouteCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Route
-        fields = ('title', 'title', 'content', 'image', 'cost', 'duration', 'routespot', 'areas')
+        fields = ('title', 'title', 'content', 'image', 'cost', 'duration', 'spot', 'areas')
     
     def create(self, validated_data):
         # 루트지역과 루트스팟 데이터 가져오기
         # 얘네 둘은 다대다 관계로 되어 있어서 특별 취급이 필요함
         route_area_data = validated_data.pop('areas')
-        routespot_data = validated_data.pop('routespot')
+        spot_data = validated_data.pop('spot')
 
         # 모델 생성
         # RouteArea모델은 route가 인자로 필요함
@@ -85,13 +85,13 @@ class RouteCreateSerializer(serializers.ModelSerializer):
         
         # 리스트 형태로 전달하면 리스트 자체를 하나의 인자로 처리
         # 리스트의 요소들을 개별 인자로 전달하기 위해 *을 사용
-        route.routespot.add(*routespot_data)
+        route.spot.add(*spot_data)
         return route
      
     def update(self, instance, validated_data):
         # 루트지역과 루트스팟 데이터 가져오기
         route_area_data = validated_data.pop('areas')
-        routespot_data = validated_data.pop('routespot')
+        spot_data = validated_data.pop('spot')
         
         # 새로운 정보를 기존 정보에 덮어 씌우기
         instance.title = validated_data.get('title', instance.title)
@@ -101,7 +101,7 @@ class RouteCreateSerializer(serializers.ModelSerializer):
         instance.cost = validated_data.get('cost', instance.cost)
         
         # set()메서드는 다대다관계에서 관련된 객체들을 대체함
-        instance.routespot.set(routespot_data)
+        instance.spot.set(spot_data)
 
         # areas에 있는 기존 데이터를 삭제하고 새로 기입된 정보로 새로운 모델 생성
         instance.areas.all().delete()
@@ -118,7 +118,7 @@ class RouteDetailSerializer(serializers.ModelSerializer):
     comments = CommentSerializer(many=True)
     comment_count = serializers.SerializerMethodField()
     rate = serializers.SerializerMethodField()
-    routespot = SpotSerializer(many=True)
+    spot = SpotSerializer(many=True)
     areas = RouteAreaSerializer(many=True)
 
     def get_user(self, obj):
