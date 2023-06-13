@@ -140,7 +140,7 @@ class ApplicantDetailView(APIView):
 class ApplicantAcceptView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def put(self, request, applicant_id):
+    def post(self, request, applicant_id):
         applicant = get_object_or_404(Applicant, id=applicant_id)
         recruitment = get_object_or_404(Recruitments, id=applicant.recruitment_id)
         
@@ -151,17 +151,14 @@ class ApplicantAcceptView(APIView):
             if recruitment.is_complete != 0:
                 return Response({"message":"더이상 수락할수 없습니다."}, status=status.HTTP_204_NO_CONTENT)
 
-            if applicant.user in recruitment.participant.all():
-                return Response({"message":"이미 수락하였습니다."}, status=status.HTTP_204_NO_CONTENT)
-            else:            
-                applicant.acceptence=2
-                applicant.save()
-                recruitment.participant.add(applicant.user)
-                
-                if  recruitment.participant.count()>=recruitment.participant_max:
-                    recruitment.is_complete=1
-                    recruitment.save()
-                return Response({"message":"참가 수락 완료"}, status=status.HTTP_200_OK)
+            applicant.acceptence=2
+            applicant.save()
+            recruitment.participant.add(applicant.user)
+            
+            if  recruitment.participant.count()>=recruitment.participant_max:
+                recruitment.is_complete=1
+                recruitment.save()
+            return Response({"message":"참가 수락 완료"}, status=status.HTTP_200_OK)
         else:
             return Response({"message":"권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
 
@@ -169,7 +166,7 @@ class ApplicantAcceptView(APIView):
 class ApplicantRejectView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def put(self, request, applicant_id):
+    def post(self, request, applicant_id):
         applicant = get_object_or_404(Applicant, id=applicant_id)
         recruitment = get_object_or_404(Recruitments, id=applicant.recruitment_id)
         
