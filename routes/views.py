@@ -3,11 +3,12 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from routes.models import Routes, Comment, RouteRate
+from routes.models import Route, Comment, RouteRate, Spot
 from routes.serializers import (
     RouteSerializer,
     RouteCreateSerializer,
     RouteDetailSerializer,
+    SpotSerializer,
     CommentSerializer,
     CommentCreateSerializer
 )
@@ -18,18 +19,37 @@ class RouteView(APIView):
 
     # 여행루트 조회
     def get(self, request):
-        routes = Routes.objects.all().order_by("-created_at")
+        routes = Route.objects.all().order_by("-created_at")
         serializer = RouteSerializer(routes, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 여행루트 작성
     def post(self, request):
         serializer = RouteCreateSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save(user=request.user)
-        else:
+        
+        if not request.user.is_authenticated:
+            return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+
+        if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(({"message": "여행 루트 작성 완료!"}, serializer.data), status=status.HTTP_201_CREATED)
+        
+        serializer.save(user=request.user)
+
+        return Response(({"message": "여행 루트 작성 완료!"},serializer.data), status=status.HTTP_201_CREATED)
+
+
+class SpotCreateView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request):
+        serializer = SpotSerializer(data=request.data)
+        
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer.save()
+
+        return Response(({"message": "스팟 등록 완료!"},serializer.data), status=status.HTTP_201_CREATED)
 
 
 class RouteDetailView(APIView):
@@ -38,31 +58,36 @@ class RouteDetailView(APIView):
 
     # 여행루트 상세보기
     def get(self, request, route_id):
-        route = get_object_or_404(Routes, id=route_id)
+        route = get_object_or_404(Route, id=route_id)
         serializer = RouteDetailSerializer(route)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 여행루트 수정하기
     def put(self, request, route_id):
-        route = get_object_or_404(Routes, id=route_id)
+        route = get_object_or_404(Route, id=route_id)
         serializer = RouteCreateSerializer(route, data=request.data)
-        if route.user == request.user:
-            if serializer.is_valid():
-                serializer.save(user=request.user)
-                return Response(({"message": "여행 루트 수정 완료!"},serializer.data), status=status.HTTP_200_OK)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
+
+        if route.user != request.user:
             return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer.save(user=request.user)
+
+        return Response(({"message": "여행 루트 수정 완료!"},serializer.data), status=status.HTTP_200_OK)
+
+            
     # 여행루트 삭제하기
     def delete(self, request, route_id):
-        route = get_object_or_404(Routes, id=route_id)
-        if route.user == request.user:
-            route.delete()
-            return Response({"message": "여행 루트 삭제 완료!"}, status=status.HTTP_204_NO_CONTENT)
-        else:
+        route = get_object_or_404(Route, id=route_id)
+        
+        if route.user != request.user:
             return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+
+        route.delete()
+        return Response({"message": "여행 루트 삭제 완료!"}, status=status.HTTP_204_NO_CONTENT)
+            
 
 
 class CommentView(APIView):
@@ -71,20 +96,24 @@ class CommentView(APIView):
 
     # 댓글 전체 조회
     def get(self, request, route_id):
-        routes = get_object_or_404(Routes, id=route_id)
+        routes = get_object_or_404(Route, id=route_id)
         comments = routes.comments.all().order_by("-created_at")
         serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 댓글 작성
     def post(self, request, route_id):
-        route = get_object_or_404(Routes, id=route_id)
         serializer = CommentCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(route=route, user=request.user)
-            return Response(({"message": "댓글 작성 완료!"}, serializer.data), status=status.HTTP_201_CREATED)
-        else:
+        
+        if not request.user.is_authenticated:
+            return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+
+        if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer.save(user=request.user, route_id=route_id)
+
+        return Response(({"message": "댓글 작성 완료!"},serializer.data), status=status.HTTP_201_CREATED)
         
 
 class CommentDetailView(APIView):
@@ -118,7 +147,7 @@ class RateView(APIView):
 
     # 평점 주기
     def post(self, request, route_id):
-        route = get_object_or_404(Routes, id=route_id)
+        route = get_object_or_404(Route, id=route_id)
         rate = request.data.get('rate')
 
         # rate가 null값인 경우
