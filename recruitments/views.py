@@ -22,7 +22,7 @@ class RecruitmentsSetPagination(PageNumberPagination):
 
 
 class RecruitmentView(generics.ListAPIView):
-    queryset = Recruitments.objects.all()
+    queryset = Recruitments.objects.all().order_by("-updated_at")
     serializer_class = RecruitmentSerializer
     pagination_class = RecruitmentsSetPagination
 
@@ -36,7 +36,7 @@ class RecruitmentView(generics.ListAPIView):
                 obj.save()
             elif now_time >= obj.departure:
                 obj.is_complete = 2
-                obj.save()
+                obj.save()                
 
         response = self.list(request)
         return Response(response.data, status=status.HTTP_200_OK)
