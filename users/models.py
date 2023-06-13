@@ -26,16 +26,26 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser):
     email = models.EmailField(
-        verbose_name="email address",
+        verbose_name="이메일",
         max_length=255,
         unique=True,
     )
-    nickname = models.CharField(
-        max_length=50, verbose_name="닉네임", null=False, blank=False
+    nickname = models.CharField(verbose_name="닉네임", max_length=50, blank=False)
+    image = models.ImageField(upload_to="users", blank=True)
+    bio = models.CharField(verbose_name="자기소개", max_length=100, blank=True)
+    GENDER_CHOICES = (
+        ("M", "남성"),
+        ("F", "여성"),
     )
-
-    is_active = models.BooleanField(default=True)
-    is_admin = models.BooleanField(default=False)
+    gender = models.CharField(
+        verbose_name="성별", max_length=1, choices=GENDER_CHOICES, blank=True
+    )
+    age = models.PositiveIntegerField(verbose_name="나이", null=True, blank=True)
+    is_active = models.BooleanField(verbose_name="활성화 여부", default=True)
+    is_admin = models.BooleanField(verbose_name="관리자 여부", default=False)
+    followings = models.ManyToManyField(
+        "self", symmetrical=False, related_name="followers", blank=True
+    )
 
     objects = UserManager()
 
