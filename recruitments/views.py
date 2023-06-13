@@ -7,7 +7,7 @@ from datetime import datetime
 
 from recruitments.models import Recruitments, Applicant
 from rest_framework.pagination import PageNumberPagination
-from rest_framework import viewsets
+from rest_framework import viewsets, generics
 
 from recruitments.serializers import (
     RecruitmentSerializer,
@@ -21,12 +21,12 @@ class RecruitmentsSetPagination(PageNumberPagination):
     page_size = 5
 
 
-class RecruitmentViewSet(viewsets.ModelViewSet):
+class RecruitmentView(generics.ListAPIView):
     queryset = Recruitments.objects.all()
     serializer_class = RecruitmentSerializer
     pagination_class = RecruitmentsSetPagination
 
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         recruitment = Recruitments.objects.all()
 
         now_time = datetime.now()
@@ -38,8 +38,8 @@ class RecruitmentViewSet(viewsets.ModelViewSet):
                 obj.is_complete = 2
                 obj.save()
 
-        serializer = RecruitmentSerializer(recruitment, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        response = self.list(request, *args, **kwargs)
+        return Response(response.data, status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = RecruitmentSerializer(data=request.data)
