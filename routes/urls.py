@@ -3,6 +3,7 @@ from routes import views
 
 urlpatterns = [
     path("", views.RouteView.as_view(), name="route_view"),
+    path("spots/", views.SpotCreateView.as_view(), name="spot_view"),
     path("<int:route_id>/", views.RouteDetailView.as_view(),
          name="route_detail_view"),
     path("<int:route_id>/comments/",
