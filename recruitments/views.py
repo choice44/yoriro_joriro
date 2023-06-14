@@ -18,11 +18,11 @@ from recruitments.serializers import (
 
 
 class RecruitmentsSetPagination(PageNumberPagination):
-    page_size = 5
+    page_size = 6
 
 
 class RecruitmentView(generics.ListAPIView):
-    queryset = Recruitments.objects.all().order_by("-updated_at")
+    queryset = Recruitments.objects.all().order_by("-created_at")
     serializer_class = RecruitmentSerializer
     pagination_class = RecruitmentsSetPagination
 
