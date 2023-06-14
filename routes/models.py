@@ -26,7 +26,7 @@ class Spot(models.Model):
     addr2 = models.CharField("상세주소", max_length=200, blank=True, null=True)
     mapx = models.FloatField("x좌표")
     mapy = models.FloatField("y좌표")
-    firstimage = models.ImageField("이미지", upload_to="Spot/%Y/%m/", blank=True, null=True)
+    firstimage = models.TextField("이미지", blank=True, null=True)
     tel = models.CharField("전화번호", max_length=20, blank=True, null=True)
     
     def __str__(self):
