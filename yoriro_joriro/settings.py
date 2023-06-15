@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     "recruitments",
     "routes",
     "joriro",
-    'django_filters',
+    "spots",
+    "django_filters"
 ]
 
 MIDDLEWARE = [
