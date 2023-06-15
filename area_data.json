@@ -1,118 +1,118 @@
 [
   {
-    "model": "routes.area",
+    "model": "spots.area",
     "pk": "1",
     "fields": {
       "name": "서울"
     }
   },
   {
-    "model": "routes.area",
+    "model": "spots.area",
     "pk": "2",
     "fields": {
       "name": "인천"
     }
   },
   {
-    "model": "routes.area",
+    "model": "spots.area",
     "pk": "3",
     "fields": {
       "name": "대전"
     }
   },
   {
-    "model": "routes.area",
+    "model": "spots.area",
     "pk": "4",
     "fields": {
       "name": "대구"
     }
   },
   {
-    "model": "routes.area",
+    "model": "spots.area",
     "pk": "5",
     "fields": {
       "name": "광주"
     }
   },
   {
-    "model": "routes.area",
+    "model": "spots.area",
     "pk": "6",
     "fields": {
       "name": "부산"
     }
   },
   {
-    "model": "routes.area",
+    "model": "spots.area",
     "pk": "7",
     "fields": {
       "name": "울산"
     }
   },
   {
-    "model": "routes.area",
+    "model": "spots.area",
     "pk": "8",
     "fields": {
       "name": "세종특별자치시"
     }
   },
   {
-    "model": "routes.area",
+    "model": "spots.area",
     "pk": "31",
     "fields": {
       "name": "경기도"
     }
   },
   {
-    "model": "routes.area",
+    "model": "spots.area",
     "pk": "32",
     "fields": {
       "name": "강원도"
     }
   },
   {
-    "model": "routes.area",
+    "model": "spots.area",
     "pk": "33",
     "fields": {
       "name": "충청북도"
     }
   },
   {
-    "model": "routes.area",
+    "model": "spots.area",
     "pk": "34",
     "fields": {
       "name": "충청남도"
     }
   },
   {
-    "model": "routes.area",
+    "model": "spots.area",
     "pk": "35",
     "fields": {
       "name": "경상북도"
     }
   },
   {
-    "model": "routes.area",
+    "model": "spots.area",
     "pk": "36",
     "fields": {
       "name": "경상남도"
     }
   },
   {
-    "model": "routes.area",
+    "model": "spots.area",
     "pk": "37",
     "fields": {
       "name": "전라북도"
     }
   },
   {
-    "model": "routes.area",
+    "model": "spots.area",
     "pk": "38",
     "fields": {
       "name": "전라남도"
     }
   },
   {
-    "model": "routes.area",
+    "model": "spots.area",
     "pk": "39",
     "fields": {
       "name": "제주도"
