@@ -1,6 +1,6 @@
 from django.db import models
 from users.models import User
-from routes.models import Spot
+from spots.models import Spot
 
 class Review(models.Model):
     RATE_CHOICES = (
