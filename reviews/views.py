@@ -5,20 +5,22 @@ from rest_framework import status, permissions
 from django_filters.rest_framework import DjangoFilterBackend
 from reviews.models import Review
 from reviews.serializers import (
-    ReviewSerializer,
-    ReviewUpdateSerializer
+    ReviewListSerializer,
+    ReviewDetailSerializer,
+    ReviewUpdateSerializer,
+    ReviewCreateSerializer
 )
 
 
 # reviews/filter/
-class ReviewTypeView(ListAPIView):
+class ReviewFilterView(ListAPIView):
     """
     타입/지역별 리뷰 목록 조회
     """
     queryset = Review.objects.all().order_by("-created_at")
-    serializer_class = ReviewSerializer
+    serializer_class = ReviewListSerializer
     filter_backends = [DjangoFilterBackend]
-    filterset_fields  = ["content_type_id", "area_code", "sigungu_code"]
+    filterset_fields  = ["spot__type", "spot__area", "spot__sigungu"]
 
 
 # reviews/
@@ -31,7 +33,7 @@ class ReviewView(APIView):
 
     def get(self, request):
         reviews = Review.objects.all().order_by("-created_at")
-        serializer = ReviewSerializer(reviews, many=True)
+        serializer = ReviewListSerializer(reviews, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     """
@@ -39,7 +41,7 @@ class ReviewView(APIView):
     """
 
     def post(self, request):
-        serializer = ReviewSerializer(data=request.data)
+        serializer = ReviewCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(user=request.user)
         return Response(({"message": "관광지 리뷰 작성 완료!"}, serializer.data), status=status.HTTP_201_CREATED)
@@ -55,7 +57,7 @@ class ReviewDetailView(APIView):
 
     def get(self, request, review_id):
         review = get_object_or_404(Review, id=review_id)
-        serializer = ReviewSerializer(review)
+        serializer = ReviewDetailSerializer(review)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     """
@@ -87,12 +89,13 @@ class ReviewDetailView(APIView):
 
 # reviews/<int:review_id>/like/
 class ReviewLikeView(APIView):
-    # 로그인한 사람만 좋아요 가능
-    permission_classes = [permissions.IsAuthenticated]
     """
     리뷰 좋아요
     """
-
+    
+    # 로그인한 사람만 좋아요 가능
+    permission_classes = [permissions.IsAuthenticated]
+    
     def post(self, request, review_id):
         review = get_object_or_404(Review, id = review_id)
         if request.user in review.likes.all():
