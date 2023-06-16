@@ -186,7 +186,7 @@ REST_FRAMEWORK = {
 
 
 # CORS 허용 목록에 ec2 ip를 추가합니다.
-CORS_ORIGIN_WHITELIST = ["http://$ec2_public_ip"]
+CORS_ORIGIN_WHITELIST = ["http://$ec2_public_ip", "http://127.0.0.1:5500"]
 # ex) CORS_ORIGIN_WHITELIST = ['http://43.201.72.190']
 
 # CSRF 허용 목록을 CORS와 동일하게 설정합니다.
