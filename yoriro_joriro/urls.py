@@ -27,6 +27,7 @@ urlpatterns = [
     path('routes/', include('routes.urls')),
     path('recruitments/', include('recruitments.urls')),
     path('joriro/', include('joriro.urls')),
+    path('spots/', include('spots.urls')),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
