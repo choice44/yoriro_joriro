@@ -10,7 +10,6 @@ class MyPageSerializer(serializers.ModelSerializer):
     followers = serializers.StringRelatedField(many=True)
     followings_count = serializers.SerializerMethodField()
     followers_count = serializers.SerializerMethodField()
-    image = serializers.ImageField()
 
     class Meta:
         model = User
@@ -19,9 +18,12 @@ class MyPageSerializer(serializers.ModelSerializer):
             "email",
             "nickname",
             "image",
-            "age",
-            "gender",
             "bio",
+            "sigungu",
+            "gender",
+            "age",
+            "created_at",
+            "updated_at",
             "is_active",
             "is_admin",
             "followers_count",
@@ -59,7 +61,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 # 로그인
-class UserTokenObtainPairSerializer(TokenObtainPairSerializer):
+class LoginSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)

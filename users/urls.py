@@ -15,4 +15,15 @@ urlpatterns = [
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("follow/<int:user_id>/", views.FollowView.as_view(), name="follow_view"),
     path("mypage/<int:user_id>/", views.MyPageView.as_view(), name="mypage_view"),
+    path("google/login/", views.google_login, name="google_login"),
+    path(
+        "google/callback/",
+        views.google_callback,
+        name="google_callback",
+    ),
+    path(
+        "google/login/finish/",
+        views.GoogleLoginView.as_view(),
+        name="google_login_todjango",
+    ),
 ]
