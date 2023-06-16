@@ -11,7 +11,7 @@ class RecruitmentSerializer(serializers.ModelSerializer):
         # fields = ("id", "user", "title", "content", "image", "created_at", "updated_at",) # 미구현 추가 내용 "category", "rate", "comment_count", "like_count",
 
     def get_user(self, obj):
-        return {"id":obj.user.id, "nickname":obj.user.nickname}
+        return {"id":obj.user.id, "nickname":obj.user.email, "age":obj.user.age, "gender":obj.user.gender}
         
 
 class RecruitmentDetailSerializer(serializers.ModelSerializer):
@@ -27,7 +27,7 @@ class RecruitmentDetailSerializer(serializers.ModelSerializer):
         return {"id":obj.user.id, "nickname":obj.user.email, "age":obj.user.age, "gender":obj.user.gender}
         
     def get_participant(self, obj):
-        participant_data = obj.participant.values("id", 'nickname')
+        participant_data = obj.participant.values("id", 'nickname', "age", "gender")
         return participant_data
     
     def get_participant_now(self, obj):
@@ -54,4 +54,4 @@ class RecruitmentJoinSerializer(serializers.ModelSerializer):
         fields = ("id", "user", "appeal", "acceptence",)
 
     def get_user(self, obj):
-        return {"id":obj.user.id, "nickname":obj.user.nickname}
+        return {"id":obj.user.id, "nickname":obj.user.nickname, "age":obj.user.age, "gender":obj.user.gender}
