@@ -15,6 +15,7 @@ class MyPageSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             "id",
+            "area",
             "email",
             "nickname",
             "image",
@@ -67,5 +68,6 @@ class LoginSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
 
         token["email"] = user.email
+        token["nickname"] = user.nickname
 
         return token
