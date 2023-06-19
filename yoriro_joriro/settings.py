@@ -1,15 +1,18 @@
 from pathlib import Path
 from datetime import timedelta
 import os
+import dotenv
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+dotenv.read_dotenv((os.path.join(BASE_DIR, ".env")))
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 DEBUG = os.environ.get('DEBUG', '0') == '1'
 
-ALLOWED_HOSTS = ['backend', ]
+ALLOWED_HOSTS = ['*']
 
 
 INSTALLED_APPS = [
