@@ -25,6 +25,13 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser):
+    area = models.ForeignKey(
+        "spots.Area",
+        verbose_name="시도",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
     email = models.EmailField(
         verbose_name="이메일",
         max_length=255,
