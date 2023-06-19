@@ -29,7 +29,7 @@ class Spot(models.Model):
     mapx = models.FloatField("x좌표")
     mapy = models.FloatField("y좌표")
     firstimage = models.TextField("이미지", blank=True, null=True)
-    tel = models.CharField("전화번호", max_length=20, blank=True, null=True)
+    tel = models.CharField("전화번호", max_length=200, blank=True, null=True)
 
     def __str__(self):
         return self.title
