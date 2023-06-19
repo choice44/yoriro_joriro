@@ -1,31 +1,31 @@
 from rest_framework.views import APIView
 from rest_framework.generics import get_object_or_404
-from rest_framework import status
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-)
-from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from rest_framework.decorators import api_view
+from rest_framework import status
+
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
+
+from django.shortcuts import redirect
+from django.http import JsonResponse
+
+from dj_rest_auth.registration.views import SocialLoginView
+
+from allauth.socialaccount.models import SocialAccount
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client
+from allauth.socialaccount.providers.google import views as google_view
+from allauth.socialaccount.providers.kakao import views as kakao_view
 
 from users.models import User
 from users.serializers import (
     UserSerializer,
     MyPageSerializer,
-    LoginSerializer,
 )
 
-from django.shortcuts import redirect
 from json import JSONDecodeError
-from django.http import JsonResponse
+
 import requests
 import os
-from .models import *
-from dj_rest_auth.registration.views import SocialLoginView
-from allauth.socialaccount.models import SocialAccount
-from allauth.socialaccount.providers.oauth2.client import OAuth2Client
-from allauth.socialaccount.providers.google import views as google_view
-from allauth.socialaccount.providers.kakao import views as kakao_view
 
 
 # 회원가입
@@ -39,11 +39,6 @@ class SignupView(APIView):
             return Response(
                 {"message": f"${serializer.errors}"}, status=status.HTTP_400_BAD_REQUEST
             )
-
-
-# 로그인
-class LoginView(TokenObtainPairView):
-    serializer_class = LoginSerializer
 
 
 # 팔로우
@@ -172,7 +167,8 @@ def google_callback(request):
 
         # 이미 Google로 제대로 가입된 유저 => 로그인 & 해당 유저의 jwt 발급
         data = {"access_token": access_token, "code": code}
-        accept = requests.post(f"{BASE_URL}users/google/login/finish/", data=data)
+        accept = requests.post(
+            f"{BASE_URL}users/google/login/finish/", data=data)
         accept_status = accept.status_code
 
         if accept_status != 200:
@@ -190,7 +186,8 @@ def google_callback(request):
     except User.DoesNotExist:
         # 전달받은 이메일로 기존에 가입된 유저가 아예 없으면 => 새로 회원가입 & 해당 유저의 jwt 발급
         data = {"access_token": access_token, "code": code}
-        accept = requests.post(f"{BASE_URL}users/google/login/finish/", data=data)
+        accept = requests.post(
+            f"{BASE_URL}users/google/login/finish/", data=data)
 
         accept_status = accept.status_code
 
@@ -265,8 +262,6 @@ def kakao_callback(request):
             {"err_msg": "failed to get email"}, status=status.HTTP_400_BAD_REQUEST
         )
 
-    # return Response(profile_json)
-
     try:
         # 전달받은 이메일로 등록된 유저가 있는지 탐색
         user = User.objects.get(email=email)
@@ -283,7 +278,8 @@ def kakao_callback(request):
 
         # 이미 카카오로 제대로 가입된 유저 => 로그인 & 해당 유저의 jwt 발급
         data = {"access_token": access_token, "code": code}
-        accept = requests.post(f"{BASE_URL}users/kakao/login/finish/", data=data)
+        accept = requests.post(
+            f"{BASE_URL}users/kakao/login/finish/", data=data)
         accept_status = accept.status_code
 
         if accept_status != 200:
@@ -301,7 +297,8 @@ def kakao_callback(request):
     except User.DoesNotExist:
         # 전달받은 이메일로 기존에 가입된 유저가 아예 없으면 => 새로 회원가입 & 해당 유저의 jwt 발급
         data = {"access_token": access_token, "code": code}
-        accept = requests.post(f"{BASE_URL}users/kakao/login/finish/", data=data)
+        accept = requests.post(
+            f"{BASE_URL}users/kakao/login/finish/", data=data)
 
         accept_status = accept.status_code
 
