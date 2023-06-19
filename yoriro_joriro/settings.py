@@ -1,18 +1,15 @@
 from pathlib import Path
 from datetime import timedelta
 import os
-import dotenv
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-dotenv.read_dotenv((os.path.join(BASE_DIR, ".env")))
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 DEBUG = os.environ.get('DEBUG', '0') == '1'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['backend', ]
 
 
 INSTALLED_APPS = [
@@ -152,7 +149,7 @@ REST_FRAMEWORK = {
 }
 
 
-CORS_ORIGIN_WHITELIST = ["http://127.0.0.1:5500"]
+CORS_ORIGIN_WHITELIST = ["https://api.bechol.com", "http://127.0.0.1:5500"]
 
 CSRF_TRUSTED_ORIGINS = CORS_ORIGIN_WHITELIST
 

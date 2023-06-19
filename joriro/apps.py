@@ -21,9 +21,9 @@ class JoriroConfig(AppConfig):
         3: lraspp_mobilenet_v3_large(weights=weights[3]).eval()
     }
     backgrounds = {
-        1: "static/background_image/625.jpg",
-        2: "static/background_image/haeundae.jpg",
-        3: "static/background_image/hanra.png",
-        4: "static/background_image/panmunjeom.JPG",
-        5: "static/background_image/seokguram.jpeg"
+        1: "background_image/625.jpg",
+        2: "background_image/haeundae.jpg",
+        3: "background_image/hanra.png",
+        4: "background_image/panmunjeom.JPG",
+        5: "background_image/seokguram.jpeg"
     }
