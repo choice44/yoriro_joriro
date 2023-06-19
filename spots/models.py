@@ -22,7 +22,7 @@ class Spot(models.Model):
     area = models.ForeignKey(Area, verbose_name="시도", on_delete=models.CASCADE,
                              related_name="spots", blank=True, null=True)
     type = models.IntegerField("타입")
-    title = models.CharField("제목", max_length=50)
+    title = models.CharField("제목", max_length=200)
     sigungu = models.IntegerField("시군구", blank=True, null=True)
     addr1 = models.CharField("주소", max_length=200, blank=True, null=True)
     addr2 = models.CharField("상세주소", max_length=200, blank=True, null=True)
