@@ -1,5 +1,5 @@
 from rest_framework import permissions, status
-from rest_framework.generics import get_object_or_404
+from rest_framework.generics import get_object_or_404, ListAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -14,15 +14,18 @@ from routes.serializers import (
 from spots.serializers import SpotSerializer
 
 
-class RouteView(APIView):
+class RouteView(ListAPIView):
     # 로그인한 사람은 여행루트 작성 가능. 아니면 여행루트 전체 목록 조회만 가능.
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
+    queryset = Route.objects.all().order_by("-created_at")
+    serializer_class = RouteSerializer
+
     # 여행루트 조회
-    def get(self, request):
-        routes = Route.objects.all().order_by("-created_at")    # 최신순 정렬
-        serializer = RouteSerializer(routes, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    # def get(self, request):
+    #     routes = Route.objects.all().order_by("-created_at")    # 최신순 정렬
+    #     serializer = RouteSerializer(routes, many=True)
+    #     return Response(serializer.data, status=status.HTTP_200_OK)
 
     # 여행루트 작성
     def post(self, request):
