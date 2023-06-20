@@ -13,11 +13,13 @@ import os
 
 
 class JoriroView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
     def post(self, request):
         # 시리얼라이저 초기화 및 request.data 저장
         serializer = JoriroSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        instance = serializer.save()
+        instance = serializer.save(user=request.user)
 
         # 이미지, 배경, 모델 로드
         img = Image.open(instance.image)
