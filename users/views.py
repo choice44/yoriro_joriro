@@ -93,7 +93,7 @@ class MyPageView(APIView):
 
 # 구글 로그인
 state = os.environ.get("STATE")
-BASE_URL = "http://localhost:8000/"
+BASE_URL = "https://api.bechol.com/"
 GOOGLE_CALLBACK_URI = BASE_URL + "users/google/login/callback/"
 GOOGLE_REDIRECT_URI = "http://127.0.0.1:5500/users/googleauthcallback/"
 
