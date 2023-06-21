@@ -1,4 +1,4 @@
-from rest_framework import permissions, status
+from rest_framework import status
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404, ListAPIView
 from rest_framework.views import APIView
@@ -22,13 +22,6 @@ class SigunguView(APIView):
         sigungus = Sigungu.objects.filter(area=area_id).all()
         serializer = SigunguSerializer(sigungus, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-# class SpotListView(APIView):
-#     def get(self, request):
-#         spots = Spot.objects.all()
-#         serializer = SpotSerializer(spots, many=True)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class SpotFilterView(ListAPIView):
