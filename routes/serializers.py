@@ -76,7 +76,6 @@ class RouteCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # 루트지역과 루트스팟 데이터 가져오기
         # 얘네 둘은 다대다 관계로 되어 있어서 특별 취급이 필요함
-        print(validated_data)
         route_area_data = validated_data.pop('areas')
         spots_data = validated_data.pop('spots')
 
