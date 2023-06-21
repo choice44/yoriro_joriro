@@ -27,7 +27,8 @@ class RecruitmentDetailSerializer(serializers.ModelSerializer):
         return {"id":obj.user.id, "nickname":obj.user.nickname, "age":obj.user.age, "gender":obj.user.gender}
         
     def get_participant(self, obj):
-        participant_data = obj.participant.values("id", 'nickname', "age", "gender")
+        participant_data = obj.participant.values(
+            "id", 'nickname', "age", "gender")
         return participant_data
 
     def get_participant_now(self, obj):
@@ -54,4 +55,4 @@ class RecruitmentJoinSerializer(serializers.ModelSerializer):
         fields = ("id", "user", "appeal", "acceptence",)
 
     def get_user(self, obj):
-        return {"id":obj.user.id, "nickname":obj.user.nickname, "age":obj.user.age, "gender":obj.user.gender}
+        return {"id": obj.user.id, "nickname": obj.user.nickname, "age": obj.user.age, "gender": obj.user.gender}
