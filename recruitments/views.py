@@ -4,7 +4,6 @@ from rest_framework.generics import get_object_or_404, ListAPIView
 from rest_framework import status, permissions
 
 from recruitments.models import Recruitments, Applicant
-
 from recruitments.serializers import (
     RecruitmentSerializer,
     RecruitmentDetailSerializer,
@@ -125,7 +124,7 @@ class ApplicantDetailView(APIView):
         applicant = get_object_or_404(Applicant, id=applicant_id)
         if applicant.user == request.user:
             applicant.delete()
-            return Response({"message":"지원 삭제 완료"}, status=status.HTTP_204_NO_CONTENT)
+            return Response({"message": "지원 삭제 완료"}, status=status.HTTP_204_NO_CONTENT)
         else:
             return Response({"message": "권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
 
@@ -139,10 +138,10 @@ class ApplicantAcceptView(APIView):
         
         if recruitment.user == request.user:            
             if applicant.acceptence != 0:
-                return Response({"message":"이전에 처리한 지원자입니다."}, status=status.HTTP_208_ALREADY_REPORTED)
+                return Response({"message": "이전에 처리한 지원자입니다."}, status=status.HTTP_208_ALREADY_REPORTED)
             
             if recruitment.is_complete != 0:
-                return Response({"message":"더이상 수락할수 없습니다."}, status=status.HTTP_208_ALREADY_REPORTED)
+                return Response({"message": "더이상 수락할수 없습니다."}, status=status.HTTP_208_ALREADY_REPORTED)
 
             applicant.acceptence = 2
             applicant.save()
