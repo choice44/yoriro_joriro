@@ -49,16 +49,16 @@ class FollowView(APIView):
 
         if me == you:
             return Response(
-                {"message": "You cannot follow yourself."},
+                {"message": "스스로 팔로우할 수 없습니다."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         if me in you.followers.all():
             you.followers.remove(me)
-            return Response({"message": "unfollow"}, status=status.HTTP_200_OK)
+            return Response({"message": "언팔로우하셨습니다."}, status=status.HTTP_200_OK)
         else:
             you.followers.add(me)
-            return Response({"message": "follow"}, status=status.HTTP_200_OK)
+            return Response({"message": "팔로우하셨습니다."}, status=status.HTTP_200_OK)
 
 
 # 마이페이지
@@ -143,7 +143,7 @@ def google_callback(request):
 
     if email_req_status != 200:
         return JsonResponse(
-            {"err_msg": "failed to get email"}, status=status.HTTP_400_BAD_REQUEST
+            {"err_msg": "이메일을 가져오지 못했습니다."}, status=status.HTTP_400_BAD_REQUEST
         )
 
     # 성공 시 이메일 가져오기
@@ -161,14 +161,13 @@ def google_callback(request):
         # 있는데 구글계정이 아니어도 에러
         if social_user.provider != "google":
             return JsonResponse(
-                {"err_msg": "no matching social type"},
+                {"err_msg": "일치하는 구글 계정이 없습니다."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         # 이미 Google로 제대로 가입된 유저 => 로그인 & 해당 유저의 jwt 발급
         data = {"access_token": access_token, "code": code}
-        accept = requests.post(
-            f"{BASE_URL}users/google/login/finish/", data=data)
+        accept = requests.post(f"{BASE_URL}users/google/login/finish/", data=data)
         accept_status = accept.status_code
 
         if accept_status != 200:
@@ -186,8 +185,7 @@ def google_callback(request):
     except User.DoesNotExist:
         # 전달받은 이메일로 기존에 가입된 유저가 아예 없으면 => 새로 회원가입 & 해당 유저의 jwt 발급
         data = {"access_token": access_token, "code": code}
-        accept = requests.post(
-            f"{BASE_URL}users/google/login/finish/", data=data)
+        accept = requests.post(f"{BASE_URL}users/google/login/finish/", data=data)
 
         accept_status = accept.status_code
 
@@ -204,9 +202,8 @@ def google_callback(request):
         )
 
     except SocialAccount.DoesNotExist:
-        # User는 있는데 SocialAccount가 없을 때 (=일반회원으로 가입된 이메일일때)
         return JsonResponse(
-            {"err_msg": "email exists but not social user"},
+            {"err_msg": "이메일이 있지만 소셜 사용자는 아닙니다."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -236,10 +233,9 @@ def kakao_callback(request):
 
     # code로 access token 요청
     token_request = requests.get(
-        f"https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={client_id}&redirect_uri={KAKAO_CALLBACK_URI}&code={code}"
+        f"https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={client_id}&redirect_uri=http://localhost:5500/kakao.html&code={code}"
     )
     token_response_json = token_request.json()
-
     # 에러 발생 시 중단
     error = token_response_json.get("error", None)
     if error is not None:
@@ -259,7 +255,7 @@ def kakao_callback(request):
     # 이메일 없으면 오류 => 카카오톡 최신 버전에서는 이메일 없이 가입 가능해서 추후 수정해야함
     if email is None:
         return JsonResponse(
-            {"err_msg": "failed to get email"}, status=status.HTTP_400_BAD_REQUEST
+            {"err_msg": "이메일을 가져오지 못했습니다."}, status=status.HTTP_400_BAD_REQUEST
         )
 
     try:
@@ -272,14 +268,13 @@ def kakao_callback(request):
         # 있는데 카카오계정이 아니어도 에러
         if social_user.provider != "kakao":
             return JsonResponse(
-                {"err_msg": "no matching social type"},
+                {"err_msg": "일치하는 카카오 계정이 없습니다."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         # 이미 카카오로 제대로 가입된 유저 => 로그인 & 해당 유저의 jwt 발급
         data = {"access_token": access_token, "code": code}
-        accept = requests.post(
-            f"{BASE_URL}users/kakao/login/finish/", data=data)
+        accept = requests.post(f"{BASE_URL}users/kakao/login/finish/", data=data)
         accept_status = accept.status_code
 
         if accept_status != 200:
@@ -297,8 +292,7 @@ def kakao_callback(request):
     except User.DoesNotExist:
         # 전달받은 이메일로 기존에 가입된 유저가 아예 없으면 => 새로 회원가입 & 해당 유저의 jwt 발급
         data = {"access_token": access_token, "code": code}
-        accept = requests.post(
-            f"{BASE_URL}users/kakao/login/finish/", data=data)
+        accept = requests.post(f"{BASE_URL}users/kakao/login/finish/", data=data)
 
         accept_status = accept.status_code
 
@@ -314,7 +308,6 @@ def kakao_callback(request):
         )
 
     except SocialAccount.DoesNotExist:
-        # User는 있는데 SocialAccount가 없을 때 (=일반회원으로 가입된 이메일일때)
         return JsonResponse(
             {"err_msg": "email exists but not social user"},
             status=status.HTTP_400_BAD_REQUEST,
