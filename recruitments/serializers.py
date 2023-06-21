@@ -11,8 +11,8 @@ class RecruitmentSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def get_user(self, obj):
-        return {"id": obj.user.id, "nickname": obj.user.email, "age": obj.user.age, "gender": obj.user.gender}
-
+        return {"id":obj.user.id, "nickname":obj.user.nickname, "age":obj.user.age, "gender":obj.user.gender}
+        
 
 class RecruitmentDetailSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
@@ -24,8 +24,8 @@ class RecruitmentDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def get_user(self, obj):
-        return {"id": obj.user.id, "nickname": obj.user.email, "age": obj.user.age, "gender": obj.user.gender}
-
+        return {"id":obj.user.id, "nickname":obj.user.nickname, "age":obj.user.age, "gender":obj.user.gender}
+        
     def get_participant(self, obj):
         participant_data = obj.participant.values(
             "id", 'nickname', "age", "gender")
@@ -41,11 +41,10 @@ class RecruitmentEditSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recruitments
-        fields = ("id", "user", "title", "image", "place", "departure",
-                  "arrival", "content",)  # 미구현 추가  내용 "category",
-
+        fields = ("id", "user", "title", "image", "place", "departure", "arrival", "content", "participant_max") # 미구현 추가  내용 "category",
+        
     def get_user(self, obj):
-        return {"id": obj.user.id, "nickname": obj.user.email, "age": obj.user.age, "gender": obj.user.gender}
+        return {"id":obj.user.id, "nickname":obj.user.nickname, "age":obj.user.age, "gender":obj.user.gender}
 
 
 class RecruitmentJoinSerializer(serializers.ModelSerializer):
