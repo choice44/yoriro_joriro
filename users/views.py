@@ -4,8 +4,6 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
 
-from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
-
 from django.shortcuts import redirect
 from django.http import JsonResponse
 
@@ -20,6 +18,7 @@ from users.models import User
 from users.serializers import (
     UserSerializer,
     MyPageSerializer,
+    LoginSerializer
 )
 
 from json import JSONDecodeError
@@ -96,6 +95,7 @@ class MyPageView(APIView):
 state = os.environ.get("STATE")
 BASE_URL = "http://localhost:8000/"
 GOOGLE_CALLBACK_URI = BASE_URL + "users/google/login/callback/"
+GOOGLE_REDIRECT_URI = "http://127.0.0.1:5500/users/googleauthcallback/"
 
 
 class GoogleLoginView(SocialLoginView):
@@ -109,7 +109,7 @@ def google_login(request):
     scope = "https://www.googleapis.com/auth/userinfo.email"
     client_id = os.environ.get("SOCIAL_AUTH_GOOGLE_CLIENT_ID")
     return redirect(
-        f"https://accounts.google.com/o/oauth2/v2/auth?client_id={client_id}&response_type=code&redirect_uri={GOOGLE_CALLBACK_URI}&scope={scope}"
+        f"https://accounts.google.com/o/oauth2/v2/auth?client_id={client_id}&response_type=code&redirect_uri={GOOGLE_REDIRECT_URI}&scope={scope}"
     )
 
 
@@ -121,7 +121,7 @@ def google_callback(request):
 
     # 받은 코드로 구글에 access token 요청
     token_request = requests.post(
-        f"https://oauth2.googleapis.com/token?client_id={client_id}&client_secret={client_secret}&code={code}&grant_type=authorization_code&redirect_uri={GOOGLE_CALLBACK_URI}&state={state}"
+        f"https://oauth2.googleapis.com/token?client_id={client_id}&client_secret={client_secret}&code={code}&grant_type=authorization_code&redirect_uri={GOOGLE_REDIRECT_URI}&state={state}"
     )
 
     # json으로 변환 & 에러 부분 파싱
@@ -167,15 +167,16 @@ def google_callback(request):
 
         # 이미 Google로 제대로 가입된 유저 => 로그인 & 해당 유저의 jwt 발급
         data = {"access_token": access_token, "code": code}
-        accept = requests.post(f"{BASE_URL}users/google/login/finish/", data=data)
+        accept = requests.post(
+            f"{BASE_URL}users/google/login/finish/", data=data)
         accept_status = accept.status_code
 
         if accept_status != 200:
             return JsonResponse({"err_msg": "로그인이 실패했습니다."}, status=accept_status)
 
         user, created = User.objects.get_or_create(email=email)
-        access_token = AccessToken.for_user(user)
-        refresh_token = RefreshToken.for_user(user)
+        refresh_token = LoginSerializer.get_token(user)
+        access_token = refresh_token.access_token
 
         return Response(
             {"refresh": str(refresh_token), "access": str(access_token)},
@@ -185,7 +186,8 @@ def google_callback(request):
     except User.DoesNotExist:
         # 전달받은 이메일로 기존에 가입된 유저가 아예 없으면 => 새로 회원가입 & 해당 유저의 jwt 발급
         data = {"access_token": access_token, "code": code}
-        accept = requests.post(f"{BASE_URL}users/google/login/finish/", data=data)
+        accept = requests.post(
+            f"{BASE_URL}users/google/login/finish/", data=data)
 
         accept_status = accept.status_code
 
@@ -193,8 +195,8 @@ def google_callback(request):
             return JsonResponse({"err_msg": "회원가입이 실패했습니다."}, status=accept_status)
 
         user, created = User.objects.get_or_create(email=email)
-        access_token = AccessToken.for_user(user)
-        refresh_token = RefreshToken.for_user(user)
+        refresh_token = LoginSerializer.get_token(user)
+        access_token = refresh_token.access_token
 
         return Response(
             {"refresh": str(refresh_token), "access": str(access_token)},
@@ -210,6 +212,7 @@ def google_callback(request):
 
 # 카카오 로그인
 KAKAO_CALLBACK_URI = BASE_URL + "users/kakao/login/callback/"
+KAKAO_REDIRECT_URI = "http://127.0.0.1:5500/users/kakaoauthcallback/"
 
 
 class KakaoLoginView(SocialLoginView):
@@ -222,7 +225,7 @@ class KakaoLoginView(SocialLoginView):
 def kakao_login(request):
     client_id = os.environ.get("SOCIAL_AUTH_KAKAO_CLIENT_ID")
     return redirect(
-        f"https://kauth.kakao.com/oauth/authorize?client_id={client_id}&redirect_uri={KAKAO_CALLBACK_URI}&response_type=code&scope=account_email"
+        f"https://kauth.kakao.com/oauth/authorize?client_id={client_id}&redirect_uri={KAKAO_REDIRECT_URI}&response_type=code&scope=account_email"
     )
 
 
@@ -233,7 +236,7 @@ def kakao_callback(request):
 
     # code로 access token 요청
     token_request = requests.get(
-        f"https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={client_id}&redirect_uri=http://localhost:5500/kakao.html&code={code}"
+        f"https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={client_id}&redirect_uri={KAKAO_REDIRECT_URI}&code={code}"
     )
     token_response_json = token_request.json()
     # 에러 발생 시 중단
@@ -274,15 +277,16 @@ def kakao_callback(request):
 
         # 이미 카카오로 제대로 가입된 유저 => 로그인 & 해당 유저의 jwt 발급
         data = {"access_token": access_token, "code": code}
-        accept = requests.post(f"{BASE_URL}users/kakao/login/finish/", data=data)
+        accept = requests.post(
+            f"{BASE_URL}users/kakao/login/finish/", data=data)
         accept_status = accept.status_code
 
         if accept_status != 200:
             return JsonResponse({"err_msg": "로그인이 실패했습니다."}, status=accept_status)
 
         user, created = User.objects.get_or_create(email=email)
-        access_token = AccessToken.for_user(user)
-        refresh_token = RefreshToken.for_user(user)
+        refresh_token = LoginSerializer.get_token(user)
+        access_token = refresh_token.access_token
 
         return Response(
             {"refresh": str(refresh_token), "access": str(access_token)},
@@ -292,7 +296,8 @@ def kakao_callback(request):
     except User.DoesNotExist:
         # 전달받은 이메일로 기존에 가입된 유저가 아예 없으면 => 새로 회원가입 & 해당 유저의 jwt 발급
         data = {"access_token": access_token, "code": code}
-        accept = requests.post(f"{BASE_URL}users/kakao/login/finish/", data=data)
+        accept = requests.post(
+            f"{BASE_URL}users/kakao/login/finish/", data=data)
 
         accept_status = accept.status_code
 
@@ -300,8 +305,8 @@ def kakao_callback(request):
             return JsonResponse({"err_msg": "회원가입이 실패했습니다."}, status=accept_status)
 
         user, created = User.objects.get_or_create(email=email)
-        access_token = AccessToken.for_user(user)
-        refresh_token = RefreshToken.for_user(user)
+        refresh_token = LoginSerializer.get_token(user)
+        access_token = refresh_token.access_token
         return Response(
             {"refresh": str(refresh_token), "access": str(access_token)},
             status=status.HTTP_201_CREATED,
