@@ -44,8 +44,7 @@ class RecruitmentView(ListAPIView):
 
 
 class RecruitmentDetailView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
+    
     def get(self, request, recruitment_id):
         recruitment = get_object_or_404(Recruitments, id=recruitment_id)
         serializer = RecruitmentDetailSerializer(recruitment)
@@ -97,7 +96,6 @@ class RecruitmentJoinView(APIView):
 
         if recruitment.is_complete != 0:
             return Response({"message": "마감된 지원입니다."}, status=status.HTTP_204_NO_CONTENT)
-
         if Applicant.objects.filter(recruitment=recruitment, user=request.user).exists() or request.user in recruitment.participant.all():
             return Response({"message": "이미 지원하였습니다."}, status=status.HTTP_204_NO_CONTENT)
 
@@ -135,15 +133,14 @@ class ApplicantAcceptView(APIView):
 
     def post(self, request, applicant_id):
         applicant = get_object_or_404(Applicant, id=applicant_id)
-        recruitment = get_object_or_404(
-            Recruitments, id=applicant.recruitment_id)
-
-        if recruitment.user == request.user:
+        recruitment = get_object_or_404(Recruitments, id=applicant.recruitment_id)
+        
+        if recruitment.user == request.user:            
             if applicant.acceptence != 0:
-                return Response({"message": "이전에 처리한 지원자입니다."}, status=status.HTTP_204_NO_CONTENT)
-
+                return Response({"message": "이전에 처리한 지원자입니다."}, status=status.HTTP_208_ALREADY_REPORTED)
+            
             if recruitment.is_complete != 0:
-                return Response({"message": "더이상 수락할수 없습니다."}, status=status.HTTP_204_NO_CONTENT)
+                return Response({"message": "더이상 수락할수 없습니다."}, status=status.HTTP_208_ALREADY_REPORTED)
 
             applicant.acceptence = 2
             applicant.save()

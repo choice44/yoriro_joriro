@@ -4,8 +4,6 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
 
-from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
-
 from django.shortcuts import redirect
 from django.http import JsonResponse
 
@@ -20,6 +18,7 @@ from users.models import User
 from users.serializers import (
     UserSerializer,
     MyPageSerializer,
+    LoginSerializer
 )
 
 from json import JSONDecodeError
@@ -49,16 +48,16 @@ class FollowView(APIView):
 
         if me == you:
             return Response(
-                {"message": "You cannot follow yourself."},
+                {"message": "스스로 팔로우할 수 없습니다."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         if me in you.followers.all():
             you.followers.remove(me)
-            return Response({"message": "unfollow"}, status=status.HTTP_200_OK)
+            return Response({"message": "언팔로우하셨습니다."}, status=status.HTTP_200_OK)
         else:
             you.followers.add(me)
-            return Response({"message": "follow"}, status=status.HTTP_200_OK)
+            return Response({"message": "팔로우하셨습니다."}, status=status.HTTP_200_OK)
 
 
 # 마이페이지
@@ -96,6 +95,7 @@ class MyPageView(APIView):
 state = os.environ.get("STATE")
 BASE_URL = "http://localhost:8000/"
 GOOGLE_CALLBACK_URI = BASE_URL + "users/google/login/callback/"
+GOOGLE_REDIRECT_URI = "http://127.0.0.1:5500/users/googleauthcallback/"
 
 
 class GoogleLoginView(SocialLoginView):
@@ -109,7 +109,7 @@ def google_login(request):
     scope = "https://www.googleapis.com/auth/userinfo.email"
     client_id = os.environ.get("SOCIAL_AUTH_GOOGLE_CLIENT_ID")
     return redirect(
-        f"https://accounts.google.com/o/oauth2/v2/auth?client_id={client_id}&response_type=code&redirect_uri={GOOGLE_CALLBACK_URI}&scope={scope}"
+        f"https://accounts.google.com/o/oauth2/v2/auth?client_id={client_id}&response_type=code&redirect_uri={GOOGLE_REDIRECT_URI}&scope={scope}"
     )
 
 
@@ -121,7 +121,7 @@ def google_callback(request):
 
     # 받은 코드로 구글에 access token 요청
     token_request = requests.post(
-        f"https://oauth2.googleapis.com/token?client_id={client_id}&client_secret={client_secret}&code={code}&grant_type=authorization_code&redirect_uri={GOOGLE_CALLBACK_URI}&state={state}"
+        f"https://oauth2.googleapis.com/token?client_id={client_id}&client_secret={client_secret}&code={code}&grant_type=authorization_code&redirect_uri={GOOGLE_REDIRECT_URI}&state={state}"
     )
 
     # json으로 변환 & 에러 부분 파싱
@@ -143,7 +143,7 @@ def google_callback(request):
 
     if email_req_status != 200:
         return JsonResponse(
-            {"err_msg": "failed to get email"}, status=status.HTTP_400_BAD_REQUEST
+            {"err_msg": "이메일을 가져오지 못했습니다."}, status=status.HTTP_400_BAD_REQUEST
         )
 
     # 성공 시 이메일 가져오기
@@ -161,7 +161,7 @@ def google_callback(request):
         # 있는데 구글계정이 아니어도 에러
         if social_user.provider != "google":
             return JsonResponse(
-                {"err_msg": "no matching social type"},
+                {"err_msg": "일치하는 구글 계정이 없습니다."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -175,8 +175,8 @@ def google_callback(request):
             return JsonResponse({"err_msg": "로그인이 실패했습니다."}, status=accept_status)
 
         user, created = User.objects.get_or_create(email=email)
-        access_token = AccessToken.for_user(user)
-        refresh_token = RefreshToken.for_user(user)
+        refresh_token = LoginSerializer.get_token(user)
+        access_token = refresh_token.access_token
 
         return Response(
             {"refresh": str(refresh_token), "access": str(access_token)},
@@ -195,8 +195,8 @@ def google_callback(request):
             return JsonResponse({"err_msg": "회원가입이 실패했습니다."}, status=accept_status)
 
         user, created = User.objects.get_or_create(email=email)
-        access_token = AccessToken.for_user(user)
-        refresh_token = RefreshToken.for_user(user)
+        refresh_token = LoginSerializer.get_token(user)
+        access_token = refresh_token.access_token
 
         return Response(
             {"refresh": str(refresh_token), "access": str(access_token)},
@@ -204,15 +204,15 @@ def google_callback(request):
         )
 
     except SocialAccount.DoesNotExist:
-        # User는 있는데 SocialAccount가 없을 때 (=일반회원으로 가입된 이메일일때)
         return JsonResponse(
-            {"err_msg": "email exists but not social user"},
+            {"err_msg": "이메일이 있지만 소셜 사용자는 아닙니다."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
 
 # 카카오 로그인
 KAKAO_CALLBACK_URI = BASE_URL + "users/kakao/login/callback/"
+KAKAO_REDIRECT_URI = "http://127.0.0.1:5500/users/kakaoauthcallback/"
 
 
 class KakaoLoginView(SocialLoginView):
@@ -225,7 +225,7 @@ class KakaoLoginView(SocialLoginView):
 def kakao_login(request):
     client_id = os.environ.get("SOCIAL_AUTH_KAKAO_CLIENT_ID")
     return redirect(
-        f"https://kauth.kakao.com/oauth/authorize?client_id={client_id}&redirect_uri={KAKAO_CALLBACK_URI}&response_type=code&scope=account_email"
+        f"https://kauth.kakao.com/oauth/authorize?client_id={client_id}&redirect_uri={KAKAO_REDIRECT_URI}&response_type=code&scope=account_email"
     )
 
 
@@ -236,10 +236,9 @@ def kakao_callback(request):
 
     # code로 access token 요청
     token_request = requests.get(
-        f"https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={client_id}&redirect_uri={KAKAO_CALLBACK_URI}&code={code}"
+        f"https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={client_id}&redirect_uri={KAKAO_REDIRECT_URI}&code={code}"
     )
     token_response_json = token_request.json()
-
     # 에러 발생 시 중단
     error = token_response_json.get("error", None)
     if error is not None:
@@ -259,7 +258,7 @@ def kakao_callback(request):
     # 이메일 없으면 오류 => 카카오톡 최신 버전에서는 이메일 없이 가입 가능해서 추후 수정해야함
     if email is None:
         return JsonResponse(
-            {"err_msg": "failed to get email"}, status=status.HTTP_400_BAD_REQUEST
+            {"err_msg": "이메일을 가져오지 못했습니다."}, status=status.HTTP_400_BAD_REQUEST
         )
 
     try:
@@ -272,7 +271,7 @@ def kakao_callback(request):
         # 있는데 카카오계정이 아니어도 에러
         if social_user.provider != "kakao":
             return JsonResponse(
-                {"err_msg": "no matching social type"},
+                {"err_msg": "일치하는 카카오 계정이 없습니다."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -286,8 +285,8 @@ def kakao_callback(request):
             return JsonResponse({"err_msg": "로그인이 실패했습니다."}, status=accept_status)
 
         user, created = User.objects.get_or_create(email=email)
-        access_token = AccessToken.for_user(user)
-        refresh_token = RefreshToken.for_user(user)
+        refresh_token = LoginSerializer.get_token(user)
+        access_token = refresh_token.access_token
 
         return Response(
             {"refresh": str(refresh_token), "access": str(access_token)},
@@ -306,15 +305,14 @@ def kakao_callback(request):
             return JsonResponse({"err_msg": "회원가입이 실패했습니다."}, status=accept_status)
 
         user, created = User.objects.get_or_create(email=email)
-        access_token = AccessToken.for_user(user)
-        refresh_token = RefreshToken.for_user(user)
+        refresh_token = LoginSerializer.get_token(user)
+        access_token = refresh_token.access_token
         return Response(
             {"refresh": str(refresh_token), "access": str(access_token)},
             status=status.HTTP_201_CREATED,
         )
 
     except SocialAccount.DoesNotExist:
-        # User는 있는데 SocialAccount가 없을 때 (=일반회원으로 가입된 이메일일때)
         return JsonResponse(
             {"err_msg": "email exists but not social user"},
             status=status.HTTP_400_BAD_REQUEST,
