@@ -44,7 +44,6 @@ class RecruitmentView(ListAPIView):
 
 
 class RecruitmentDetailView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request, recruitment_id):
         recruitment = get_object_or_404(Recruitments, id=recruitment_id)
