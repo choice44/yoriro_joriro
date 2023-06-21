@@ -8,10 +8,9 @@ class RecruitmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recruitments
         fields = "__all__"
-        # fields = ("id", "user", "title", "content", "image", "created_at", "updated_at",) # 미구현 추가 내용 "category", "rate", "comment_count", "like_count",
 
     def get_user(self, obj):
-        return {"id":obj.user.id, "nickname":obj.user.email, "age":obj.user.age, "gender":obj.user.gender}
+        return {"id":obj.user.id, "nickname":obj.user.nickname, "age":obj.user.age, "gender":obj.user.gender}
         
 
 class RecruitmentDetailSerializer(serializers.ModelSerializer):
@@ -24,10 +23,10 @@ class RecruitmentDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def get_user(self, obj):
-        return {"id":obj.user.id, "nickname":obj.user.email, "age":obj.user.age, "gender":obj.user.gender}
+        return {"id":obj.user.id, "nickname":obj.user.nickname, "age":obj.user.age, "gender":obj.user.gender} #, "image":obj.user.image
         
     def get_participant(self, obj):
-        participant_data = obj.participant.values("id", 'nickname', "age", "gender")
+        participant_data = obj.participant.values("id", 'nickname', "age", "gender") #, "image"
         return participant_data
     
     def get_participant_now(self, obj):
@@ -40,10 +39,10 @@ class RecruitmentEditSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recruitments
-        fields = ("id", "user", "title", "image", "place", "departure", "arrival", "content",) # 미구현 추가  내용 "category",
+        fields = ("id", "user", "title", "image", "place", "departure", "arrival", "content", "participant_max")
         
     def get_user(self, obj):
-        return {"id":obj.user.id, "nickname":obj.user.email, "age":obj.user.age, "gender":obj.user.gender}
+        return {"id":obj.user.id, "nickname":obj.user.nickname}
 
 
 class RecruitmentJoinSerializer(serializers.ModelSerializer):
@@ -54,4 +53,4 @@ class RecruitmentJoinSerializer(serializers.ModelSerializer):
         fields = ("id", "user", "appeal", "acceptence",)
 
     def get_user(self, obj):
-        return {"id":obj.user.id, "nickname":obj.user.nickname, "age":obj.user.age, "gender":obj.user.gender}
+        return {"id":obj.user.id, "nickname":obj.user.nickname, "age":obj.user.age, "gender":obj.user.gender} #, "image":obj.user.image
