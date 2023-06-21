@@ -4,7 +4,7 @@ from users.models import User
 
 class Joriro(models.Model):
     MODEL_CHOICE = [
-        (1, "품질"),
+        # (1, "품질"),
         (2, "보통"),
         (3, "성능"),
     ]
