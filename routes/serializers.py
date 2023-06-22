@@ -94,9 +94,8 @@ class RouteCreateSerializer(serializers.ModelSerializer):
         return route
 
     def update(self, instance, validated_data):
-        # 루트지역과 루트스팟 데이터 가져오기
-        route_area_data = validated_data.pop('areas')
-        spots_data = validated_data.pop('spots')
+        route_area_data = validated_data.pop('areas', None)
+        spots_data = validated_data.pop('spots', None)
 
         # 새로운 정보를 기존 정보에 덮어 씌우기
         instance.title = validated_data.get('title', instance.title)
@@ -105,14 +104,18 @@ class RouteCreateSerializer(serializers.ModelSerializer):
         instance.duration = validated_data.get('duration', instance.duration)
         instance.cost = validated_data.get('cost', instance.cost)
 
-        # set()메서드는 다대다관계에서 관련된 객체들을 대체함
+         # set()메서드는 다대다관계에서 관련된 객체들을 대체함
         instance.spots.set(spots_data)
 
-        # areas에 있는 기존 데이터를 삭제하고 새로 기입된 정보로 새로운 모델 생성
+        # 기존 정보 삭제
         instance.areas.all().delete()
-        routearea = RouteArea.objects.create(route=instance, **route_area_data)
+        
+        area_id = route_area_data.pop('area', None)
+        area = Area.objects.get(pk=area_id)  # Area 인스턴스를 불러옵니다.
+        
+        route_area_data['area'] = area  # Area 인스턴스를 할당합니다.
+        RouteArea.objects.create(route=instance, **route_area_data)
 
-        # 변경정보 저장
         instance.save()
         return instance
 
