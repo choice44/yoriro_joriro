@@ -95,7 +95,7 @@ class MyPageView(APIView):
 state = os.environ.get("STATE")
 BASE_URL = "https://api.bechol.com/"
 GOOGLE_CALLBACK_URI = BASE_URL + "users/google/login/callback/"
-GOOGLE_REDIRECT_URI = "http://127.0.0.1:5500/users/googleauthcallback/"
+GOOGLE_REDIRECT_URI = "https://cdn.bechol.com/users/googleauthcallback/index.html"
 
 
 class GoogleLoginView(SocialLoginView):
@@ -212,7 +212,7 @@ def google_callback(request):
 
 # 카카오 로그인
 KAKAO_CALLBACK_URI = BASE_URL + "users/kakao/login/callback/"
-KAKAO_REDIRECT_URI = "http://127.0.0.1:5500/users/kakaoauthcallback/"
+KAKAO_REDIRECT_URI = "https://cdn.bechol.com/users/kakaoauthcallback/index.html"
 
 
 class KakaoLoginView(SocialLoginView):
