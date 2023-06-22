@@ -148,12 +148,13 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "DEFAULT_PAGINATION_CLASS": "spots.core.pagination.CustomPagination",
     "PAGE_SIZE": 6,
 }
 
 
-CORS_ORIGIN_WHITELIST = ["https://api.bechol.com", "http://127.0.0.1:5500", "http://localhost:5500"]
+CORS_ORIGIN_WHITELIST = ["https://api.bechol.com",
+                         "http://127.0.0.1:5500", "http://localhost:5500", "https://cdn.bechol.com"]
 
 CSRF_TRUSTED_ORIGINS = CORS_ORIGIN_WHITELIST
 
