@@ -18,6 +18,13 @@ class RecruitmentView(ListAPIView):
     queryset = Recruitments.objects.all().order_by("-created_at")
     serializer_class = RecruitmentSerializer
 
+    def get_serializer_context(self):
+        return {
+            'request': None,  # None이 아닌 경우에 full url 표시
+            'format': self.format_kwarg,
+            'view': self
+        }
+
     def get(self, request):
         recruitment = Recruitments.objects.all()
 
@@ -44,7 +51,7 @@ class RecruitmentView(ListAPIView):
 
 
 class RecruitmentDetailView(APIView):
-    
+
     def get(self, request, recruitment_id):
         recruitment = get_object_or_404(Recruitments, id=recruitment_id)
         serializer = RecruitmentDetailSerializer(recruitment)
@@ -133,12 +140,13 @@ class ApplicantAcceptView(APIView):
 
     def post(self, request, applicant_id):
         applicant = get_object_or_404(Applicant, id=applicant_id)
-        recruitment = get_object_or_404(Recruitments, id=applicant.recruitment_id)
-        
-        if recruitment.user == request.user:            
+        recruitment = get_object_or_404(
+            Recruitments, id=applicant.recruitment_id)
+
+        if recruitment.user == request.user:
             if applicant.acceptence != 0:
                 return Response({"message": "이전에 처리한 지원자입니다."}, status=status.HTTP_208_ALREADY_REPORTED)
-            
+
             if recruitment.is_complete != 0:
                 return Response({"message": "더이상 수락할수 없습니다."}, status=status.HTTP_208_ALREADY_REPORTED)
 

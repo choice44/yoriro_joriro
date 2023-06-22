@@ -21,11 +21,12 @@ class RouteView(ListAPIView):
     queryset = Route.objects.all().order_by("-created_at")
     serializer_class = RouteSerializer
 
-    # 여행루트 조회
-    # def get(self, request):
-    #     routes = Route.objects.all().order_by("-created_at")    # 최신순 정렬
-    #     serializer = RouteSerializer(routes, many=True)
-    #     return Response(serializer.data, status=status.HTTP_200_OK)
+    def get_serializer_context(self):
+        return {
+            'request': None,  # None이 아닌 경우에 full url 표시
+            'format': self.format_kwarg,
+            'view': self
+        }
 
     # 여행루트 작성
     def post(self, request):
