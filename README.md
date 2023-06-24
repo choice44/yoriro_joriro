@@ -1,24 +1,22 @@
 # 요리로 조리로
-</br>
+관광지나 맛집의 정보를 가져와 리뷰를 작성하고 스스로 생각한 여행 루트를 공유하는 서비스
 
-## 팀명: 트래블러
-</br>
 
-### 리더: 최승원
-### 부리더: 장우석
-### 팀원: 서지인
-### 팀원: 이도윤
-### 팀원: 이찬주
-<br>
+## 팀원 소개
+리더: 최승원(조리로 AI)
 
-## 서비스 소개
-<br>
+부리더: 장우석(루트 공유)
 
-### 관광지나 맛집의 정보를 가져와 리뷰를 작성하고 스스로 생각한 여행 루트를 공유하는 서비스
-<br>
+팀원: 서지인(맛집/관광지 리뷰)
+
+팀원: 이도윤(동료 모집)
+
+팀원: 이찬주(회원 관리)
 
 ## 주요 기능
-<br>
+
+### ERD
+https://www.erdcloud.com/p/7rETaDGnFgXp4Rso4
 
 ### 회원 기능
 #### - JWT 토큰 기반 로그인
@@ -43,23 +41,34 @@
 <br>
 
 ## 개발환경
-<br>
 
-### Python = 3.11.3 
-### Django = 4.2.2
-### djangorestframework = 3.14.0
-### djangorestframework-simplejwt = 5.2.2
-### dj-rest-auth = 4.0.1
-### django-allauth = 0.51.0
-### django-filter = 23.2
-### django-cors-headers = 4.0.0
-### torch = 2.0.1
-### torchaudio = 2.0.2
-### torchvision = 0.15.2
-### numpy = 1.24.3
-### opencv-python = 4.7.0.72
-### Pillow = 9.5.0
-<br>
+Python = 3.11.3 
+
+Django = 4.2.2
+
+djangorestframework = 3.14.0
+
+djangorestframework-simplejwt = 5.2.2
+
+dj-rest-auth = 4.0.1
+
+django-allauth = 0.51.0
+
+django-filter = 23.2
+
+django-cors-headers = 4.0.0
+
+torch = 2.0.1
+
+torchaudio = 2.0.2
+
+torchvision = 0.15.2
+
+numpy = 1.24.3
+
+opencv-python = 4.7.0.72
+
+Pillow = 9.5.0
 
 ## 설치 및 사용방법
 ### 1. 패키지 설치
@@ -82,6 +91,18 @@
   ```
 ### 4. 서버 실행
 - `python manage.py runserver` 명령어로 서버를 실행시켜주면 끝입니다.
+
+## 라이센스
+
+### 한국관광공사 TourAPI4.0(https://api.visitkorea.or.kr/)
+- 관광지, 맛집데이터(area_data, sigungu_data, spot_data)
+
+### 조리로 AI 백그라운드 이미지
+- 625.jpg: 전쟁기념관(https://www.warmemo.or.kr/)
+- haeundae.jpg: 부산광역시(https://www.busan.go.kr/index)
+- hanra.jpg: 제주특별자치도청(https://www.jeju.go.kr/index.html)
+- panmunjeom.jpg: 경기도(https://www.gg.go.kr/)
+- seokguram.jpg: 경주시청(https://www.gyeongju.go.kr/tour/page.do?listType=&mnu_uid=2349&sortKwd=&code_uid=1044&srchKwd=&area_uid=258&cmd=2&pageNo=1)
 
 ## 팀 노션
 <br>
