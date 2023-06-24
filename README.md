@@ -61,6 +61,28 @@
 ### Pillow = 9.5.0
 <br>
 
+## 설치 및 사용방법
+### 1. 패키지 설치
+- 프로젝트 폴더를 설치하신 후 프로그램 실행에 필요한 패키지들을 설치해주셔야 합니다.
+- 터미널에 `pip install -r requirements` 명령어를 통해 필요한 패키지를 한 번에 설치할 수 있습니다.
+
+### 2. 마이그레이션
+- 패키지 설치 후 DB에 모델의 내용을 적용시키기 위해 Django의 마이그레이션 기능이 필요합니다.
+- `python manage.py makemigrations` 명령어를 통해 마이그레이션을 생성해주고
+- `python manage.py migrate` 명령어를 통해 마이그레이션을 적용해줍니다.
+
+### 3. DB에 데이터 저장
+- 프로젝트 최상위 폴더에 있는 3개의 json파일(area_data, sigungu_data, spot_data)을 DB에 저장시켜야 합니다.
+- 이 json파일들은 각각 시/도, 시군구, 관광지와 맛집의 정보를 담고 있습니다.
+- 아래의 명령어를 반드시! 순서대로 하나씩 기입해주세요. 마지막 spot_data의 경우 데이터양이 많아서 다소 시간이 걸릴 수 있습니다.
+  ```
+  python manage.py loaddata area_data
+  python manage.py loaddata sigungu_data
+  python manage.py loaddata spot_data
+  ```
+### 4. 서버 실행
+- `python manage.py runserver` 명령어로 서버를 실행시켜주면 끝입니다.
+
 ## 팀 노션
 <br>
 
