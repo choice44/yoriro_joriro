@@ -6,8 +6,8 @@ from users.models import User
 
 # 마이페이지
 class MyPageSerializer(serializers.ModelSerializer):
-    followings = serializers.StringRelatedField(many=True)
-    followers = serializers.StringRelatedField(many=True)
+    followings = serializers.SerializerMethodField()
+    followers = serializers.SerializerMethodField()
     followings_count = serializers.SerializerMethodField()
     followers_count = serializers.SerializerMethodField()
 
@@ -32,7 +32,15 @@ class MyPageSerializer(serializers.ModelSerializer):
             "followers",
             "followings",
         )
-
+        
+    def get_followings(self, obj):
+        followings_data = obj.followings.values('id', 'nickname', 'image', 'email')
+        return followings_data
+    
+    def get_followers(self, obj):
+        followers_data = obj.followers.values('id', 'nickname', 'image', 'email')
+        return followers_data
+    
     def get_followers_count(self, obj):
         return obj.followers.count()
 
