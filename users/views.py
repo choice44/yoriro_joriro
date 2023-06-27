@@ -92,7 +92,7 @@ class MyPageView(APIView):
 state = os.environ.get("STATE")
 BASE_URL = "http://localhost:8000/"
 GOOGLE_CALLBACK_URI = BASE_URL + "users/google/login/callback/"
-GOOGLE_REDIRECT_URI = "http://127.0.0.1:5500/users/googleauthcallback/"
+GOOGLE_REDIRECT_URI = "http://127.0.0.1:5500/users/googleauthcallback/index.html"
 
 
 class GoogleLoginView(SocialLoginView):
@@ -207,7 +207,7 @@ def google_callback(request):
 
 # 카카오 로그인
 KAKAO_CALLBACK_URI = BASE_URL + "users/kakao/login/callback/"
-KAKAO_REDIRECT_URI = "http://127.0.0.1:5500/users/kakaoauthcallback/"
+KAKAO_REDIRECT_URI = "http://127.0.0.1:5500/users/kakaoauthcallback/index.html"
 
 
 class KakaoLoginView(SocialLoginView):
@@ -314,7 +314,7 @@ def kakao_callback(request):
 
 # 네이버 로그인
 NAVER_CALLBACK_URI = BASE_URL + "users/naver/login/callback/"
-NAVER_REDIRECT_URI = "http://127.0.0.1:5500/users/naverauthcallback/"
+NAVER_REDIRECT_URI = "http://localhost:5500/users/naverauthcallback/index.html"
 
 
 class NaverLoginView(SocialLoginView):
