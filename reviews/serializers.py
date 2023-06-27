@@ -53,7 +53,10 @@ class ReviewDetailSerializer(serializers.ModelSerializer):
     
     
     def get_user(self, obj):
-        return {"id": obj.user.id, "nickname": obj.user.nickname}
+        if obj.user.image:
+            return {"id": obj.user.id, "nickname": obj.user.nickname, "image": obj.user.image.url}
+        else:
+            return {"id": obj.user.id, "nickname": obj.user.nickname}
     
     
     def get_spot(self, obj):
