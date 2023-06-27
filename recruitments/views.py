@@ -51,7 +51,6 @@ class RecruitmentView(ListAPIView):
 
 
 class RecruitmentDetailView(APIView):
-
     def get(self, request, recruitment_id):
         recruitment = get_object_or_404(Recruitments, id=recruitment_id)
         serializer = RecruitmentDetailSerializer(recruitment)
@@ -90,8 +89,6 @@ class RecruitmentDetailView(APIView):
 
 
 class RecruitmentJoinView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
     def get(self, request, recruitment_id):
         applicant = Applicant.objects.filter(recruitment_id=recruitment_id)
         serializer = RecruitmentJoinSerializer(applicant, many=True)
