@@ -13,13 +13,10 @@ from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from allauth.socialaccount.providers.google import views as google_view
 from allauth.socialaccount.providers.kakao import views as kakao_view
+from allauth.socialaccount.providers.naver import views as naver_view
 
 from users.models import User
-from users.serializers import (
-    UserSerializer,
-    MyPageSerializer,
-    LoginSerializer
-)
+from users.serializers import UserSerializer, MyPageSerializer, LoginSerializer
 
 from json import JSONDecodeError
 
@@ -95,7 +92,7 @@ class MyPageView(APIView):
 state = os.environ.get("STATE")
 BASE_URL = "http://localhost:8000/"
 GOOGLE_CALLBACK_URI = BASE_URL + "users/google/login/callback/"
-GOOGLE_REDIRECT_URI = "http://127.0.0.1:5500/users/googleauthcallback/"
+GOOGLE_REDIRECT_URI = "http://127.0.0.1:5500/users/googleauthcallback/index.html"
 
 
 class GoogleLoginView(SocialLoginView):
@@ -167,8 +164,7 @@ def google_callback(request):
 
         # 이미 Google로 제대로 가입된 유저 => 로그인 & 해당 유저의 jwt 발급
         data = {"access_token": access_token, "code": code}
-        accept = requests.post(
-            f"{BASE_URL}users/google/login/finish/", data=data)
+        accept = requests.post(f"{BASE_URL}users/google/login/finish/", data=data)
         accept_status = accept.status_code
 
         if accept_status != 200:
@@ -186,8 +182,7 @@ def google_callback(request):
     except User.DoesNotExist:
         # 전달받은 이메일로 기존에 가입된 유저가 아예 없으면 => 새로 회원가입 & 해당 유저의 jwt 발급
         data = {"access_token": access_token, "code": code}
-        accept = requests.post(
-            f"{BASE_URL}users/google/login/finish/", data=data)
+        accept = requests.post(f"{BASE_URL}users/google/login/finish/", data=data)
 
         accept_status = accept.status_code
 
@@ -212,7 +207,7 @@ def google_callback(request):
 
 # 카카오 로그인
 KAKAO_CALLBACK_URI = BASE_URL + "users/kakao/login/callback/"
-KAKAO_REDIRECT_URI = "http://127.0.0.1:5500/users/kakaoauthcallback/"
+KAKAO_REDIRECT_URI = "http://127.0.0.1:5500/users/kakaoauthcallback/index.html"
 
 
 class KakaoLoginView(SocialLoginView):
@@ -277,8 +272,7 @@ def kakao_callback(request):
 
         # 이미 카카오로 제대로 가입된 유저 => 로그인 & 해당 유저의 jwt 발급
         data = {"access_token": access_token, "code": code}
-        accept = requests.post(
-            f"{BASE_URL}users/kakao/login/finish/", data=data)
+        accept = requests.post(f"{BASE_URL}users/kakao/login/finish/", data=data)
         accept_status = accept.status_code
 
         if accept_status != 200:
@@ -296,8 +290,7 @@ def kakao_callback(request):
     except User.DoesNotExist:
         # 전달받은 이메일로 기존에 가입된 유저가 아예 없으면 => 새로 회원가입 & 해당 유저의 jwt 발급
         data = {"access_token": access_token, "code": code}
-        accept = requests.post(
-            f"{BASE_URL}users/kakao/login/finish/", data=data)
+        accept = requests.post(f"{BASE_URL}users/kakao/login/finish/", data=data)
 
         accept_status = accept.status_code
 
@@ -314,6 +307,116 @@ def kakao_callback(request):
 
     except SocialAccount.DoesNotExist:
         return JsonResponse(
-            {"err_msg": "email exists but not social user"},
+            {"err_msg": "이메일이 있지만 소셜 사용자는 아닙니다."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+# 네이버 로그인
+NAVER_CALLBACK_URI = BASE_URL + "users/naver/login/callback/"
+NAVER_REDIRECT_URI = "http://localhost:5500/users/naverauthcallback/index.html"
+
+
+class NaverLoginView(SocialLoginView):
+    adapter_class = naver_view.NaverOAuth2Adapter
+    callback_url = NAVER_CALLBACK_URI
+    client_class = OAuth2Client
+
+
+@api_view(["POST", "GET"])
+def naver_login(request):
+    client_id = os.environ.get("SOCIAL_AUTH_NAVER_CLIENT_ID")
+    return redirect(
+        f"https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id={client_id}&state=STATE_STRING&redirect_uri={NAVER_CALLBACK_URI}"
+    )
+
+
+@api_view(["POST", "GET"])
+def naver_callback(request):
+    client_id = os.environ.get("SOCIAL_AUTH_NAVER_CLIENT_ID")
+    client_secret = os.environ.get("SOCIAL_AUTH_NAVER_SECRET")
+    code = request.GET.get("code")
+    state_string = request.GET.get("state")
+
+    # code로 access token 요청
+    token_request = requests.get(
+        f"https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&client_id={client_id}&client_secret={client_secret}&code={code}&state={state_string}&redirect_uri={NAVER_REDIRECT_URI}"
+    )
+    token_response_json = token_request.json()
+
+    error = token_response_json.get("error", None)
+    if error is not None:
+        raise JSONDecodeError(error)
+
+    access_token = token_response_json.get("access_token")
+
+    # return JsonResponse({"access_token":access_token})
+
+    # access token으로 네이버 프로필 요청
+    profile_request = requests.post(
+        "https://openapi.naver.com/v1/nid/me",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    profile_json = profile_request.json()
+
+    email = profile_json.get("response").get("email")
+
+    if email is None:
+        return JsonResponse(
+            {"err_msg": "이메일을 가져오지 못했습니다."}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        # 전달받은 이메일로 등록된 유저가 있는지 탐색
+        user = User.objects.get(email=email)
+
+        # FK로 연결되어 있는 socialaccount 테이블에서 해당 이메일의 유저가 있는지 확인
+        social_user = SocialAccount.objects.get(user=user)
+
+        # 있는데 네이버계정이 아니어도 에러
+        if social_user.provider != "naver":
+            return JsonResponse(
+                {"err_msg": "일치하는 네이버 계정이 없습니다."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 이미 네이버로 제대로 가입된 유저 => 로그인 & 해당 유저의 jwt 발급
+        data = {"access_token": access_token, "code": code}
+        accept = requests.post(f"{BASE_URL}users/naver/login/finish/", data=data)
+        accept_status = accept.status_code
+
+        if accept_status != 200:
+            return JsonResponse({"err_msg": "로그인이 실패했습니다."}, status=accept_status)
+
+        user, created = User.objects.get_or_create(email=email)
+        refresh_token = LoginSerializer.get_token(user)
+        access_token = refresh_token.access_token
+
+        return Response(
+            {"refresh": str(refresh_token), "access": str(access_token)},
+            status=status.HTTP_200_OK,
+        )
+
+    except User.DoesNotExist:
+        # 전달받은 이메일로 기존에 가입된 유저가 아예 없으면 => 새로 회원가입 & 해당 유저의 jwt 발급
+        data = {"access_token": access_token, "code": code}
+        accept = requests.post(f"{BASE_URL}users/naver/login/finish/", data=data)
+
+        accept_status = accept.status_code
+
+        if accept_status != 200:
+            return JsonResponse({"err_msg": "회원가입이 실패했습니다."}, status=accept_status)
+
+        user, created = User.objects.get_or_create(email=email)
+        refresh_token = LoginSerializer.get_token(user)
+        access_token = refresh_token.access_token
+        return Response(
+            {"refresh": str(refresh_token), "access": str(access_token)},
+            status=status.HTTP_201_CREATED,
+        )
+
+    except SocialAccount.DoesNotExist:
+        return JsonResponse(
+            {"err_msg": "이메일이 있지만 소셜 사용자는 아닙니다."},
             status=status.HTTP_400_BAD_REQUEST,
         )

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
     "allauth.socialaccount.providers.kakao",
+    "allauth.socialaccount.providers.naver",
 ]
 
 SITE_ID = 1
@@ -153,8 +154,12 @@ REST_FRAMEWORK = {
 }
 
 
-CORS_ORIGIN_WHITELIST = ["https://api.bechol.com",
-                         "http://127.0.0.1:5500", "http://localhost:5500", "https://cdn.bechol.com"]
+CORS_ORIGIN_WHITELIST = [
+    "https://api.bechol.com",
+    "http://127.0.0.1:5500",
+    "http://localhost:5500",
+    "https://cdn.bechol.com",
+]
 
 CSRF_TRUSTED_ORIGINS = CORS_ORIGIN_WHITELIST
 
