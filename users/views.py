@@ -318,7 +318,7 @@ def kakao_callback(request):
 
 # 네이버 로그인
 NAVER_CALLBACK_URI = BASE_URL + "users/naver/login/callback/"
-NAVER_REDIRECT_URI = "http://localhost:5500/users/naverauthcallback/index.html"
+NAVER_REDIRECT_URI = "https://cdn.bechol.com/users/naverauthcallback/index.html"
 
 
 class NaverLoginView(SocialLoginView):
@@ -353,8 +353,6 @@ def naver_callback(request):
         raise JSONDecodeError(error)
 
     access_token = token_response_json.get("access_token")
-
-    # return JsonResponse({"access_token":access_token})
 
     # access token으로 네이버 프로필 요청
     profile_request = requests.post(
