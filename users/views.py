@@ -340,11 +340,10 @@ def naver_callback(request):
     client_id = os.environ.get("SOCIAL_AUTH_NAVER_CLIENT_ID")
     client_secret = os.environ.get("SOCIAL_AUTH_NAVER_SECRET")
     code = request.GET.get("code")
-    state_string = request.GET.get("state")
 
     # code로 access token 요청
     token_request = requests.get(
-        f"https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&client_id={client_id}&client_secret={client_secret}&code={code}&state={state_string}&redirect_uri={NAVER_REDIRECT_URI}"
+        f"https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&client_id={client_id}&client_secret={client_secret}&code={code}&redirect_uri={NAVER_REDIRECT_URI}"
     )
     token_response_json = token_request.json()
 
