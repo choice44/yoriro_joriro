@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 from users.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 
@@ -28,6 +29,9 @@ class Recruitments(models.Model):
     
     def __str__(self):
         return self.title
+    
+    def get_absolute_url(self):
+        return reverse('recruitment_detail_view', kwargs={"recruitment_id":self.pk})
 
 
 class Applicant(models.Model):
