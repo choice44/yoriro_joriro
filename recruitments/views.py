@@ -15,6 +15,8 @@ from datetime import datetime
 
 
 class RecruitmentView(ListAPIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
     queryset = Recruitments.objects.all().order_by("-created_at")
     serializer_class = RecruitmentSerializer
 
@@ -51,6 +53,8 @@ class RecruitmentView(ListAPIView):
 
 
 class RecruitmentDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
     def get(self, request, recruitment_id):
         recruitment = get_object_or_404(Recruitments, id=recruitment_id)
         serializer = RecruitmentDetailSerializer(recruitment)
@@ -89,6 +93,8 @@ class RecruitmentDetailView(APIView):
 
 
 class RecruitmentJoinView(APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    
     def get(self, request, recruitment_id):
         applicant = Applicant.objects.filter(recruitment_id=recruitment_id)
         serializer = RecruitmentJoinSerializer(applicant, many=True)
