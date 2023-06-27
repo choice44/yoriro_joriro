@@ -46,7 +46,6 @@ class ReviewListSerializer(serializers.ModelSerializer):
 # 리뷰 상세 조회        
 class ReviewDetailSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
-    user_image = serializers.SerializerMethodField()
     spot = serializers.SerializerMethodField()
     created_at = serializers.SerializerMethodField()
     updated_at = serializers.SerializerMethodField()
@@ -54,14 +53,10 @@ class ReviewDetailSerializer(serializers.ModelSerializer):
     
     
     def get_user(self, obj):
-        return {"id": obj.user.id, "nickname": obj.user.nickname}
-    
-    
-    def get_user_image(self, obj):
         if obj.user.image:
-            return obj.user.image.url
+            return {"id": obj.user.id, "nickname": obj.user.nickname, "image": obj.user.image.url}
         else:
-            return None
+            return {"id": obj.user.id, "nickname": obj.user.nickname}
     
     
     def get_spot(self, obj):
