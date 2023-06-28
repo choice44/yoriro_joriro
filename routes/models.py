@@ -14,11 +14,18 @@ class Route(models.Model):
     cost = models.IntegerField("경비")
     duration = models.CharField("기간", max_length=50)
     spots = models.ManyToManyField(
-        Spot, verbose_name="루트스팟", blank=True, related_name='routes')
+        Spot, verbose_name="루트스팟", blank=True, related_name='routes', through='RouteSpot')
 
     def __str__(self):
         return self.title
 
+
+class RouteSpot(models.Model):
+    route = models.ForeignKey(Route, on_delete=models.CASCADE, related_name="route_spots")
+    spot = models.ForeignKey(Spot, on_delete=models.CASCADE)
+    order = models.IntegerField("순서")
+    day = models.IntegerField("일차")
+    
 
 class RouteArea(models.Model):
     route = models.ForeignKey(Route, verbose_name="경로",
