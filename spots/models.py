@@ -1,8 +1,12 @@
 from django.db import models
+from django.urls import reverse
 
 
 class Area(models.Model):
     name = models.CharField("이름", max_length=50)
+
+    def get_absolute_url(self):
+        return reverse('sigungu_view', kwargs={"area_id": self.id})
 
     def __str__(self):
         return self.name
@@ -30,6 +34,9 @@ class Spot(models.Model):
     mapy = models.FloatField("y좌표")
     firstimage = models.TextField("이미지", blank=True, null=True)
     tel = models.CharField("전화번호", max_length=200, blank=True, null=True)
+
+    def get_absolute_url(self):
+        return reverse('spot_detail_view', kwargs={"spot_id": self.id})
 
     def __str__(self):
         return self.title
