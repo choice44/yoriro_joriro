@@ -108,6 +108,8 @@ class RecruitmentJoinView(APIView):
             return Response({"message": "마감된 지원입니다."}, status=status.HTTP_204_NO_CONTENT)
         if Applicant.objects.filter(recruitment=recruitment, user=request.user).exists() or request.user in recruitment.participant.all():
             return Response({"message": "이미 지원하였습니다."}, status=status.HTTP_204_NO_CONTENT)
+        if recruitment.user.id == request.user.id:
+            return Response({"message": "작성자는 지원할 수 없습니다."}, status=status.HTTP_204_NO_CONTENT) 
 
         if serializer.is_valid():
             serializer.save(recruitment=recruitment, user=request.user)
