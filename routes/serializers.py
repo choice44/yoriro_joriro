@@ -11,7 +11,8 @@ class RouteAreaSerializer(serializers.ModelSerializer):
     class Meta:
         model = RouteArea
         fields = ('area', 'sigungu')
-        
+
+# 여행경로 목적지
 class RouteSpotSerializer(serializers.ModelSerializer):
     spot = SpotSerializer()
     
@@ -19,6 +20,12 @@ class RouteSpotSerializer(serializers.ModelSerializer):
         model = RouteSpot
         fields = ['spot', 'order', 'day']
 
+# 여행경로 목적지 생성
+class SpotCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Spot
+        fields = ['id', 'type', 'title', 'mapx', 'mapy']
+        
 
 # 여행경로 전체 조회
 class RouteSerializer(serializers.ModelSerializer):
