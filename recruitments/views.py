@@ -15,6 +15,8 @@ from datetime import datetime
 
 
 class RecruitmentView(ListAPIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
     queryset = Recruitments.objects.all().order_by("-created_at")
     serializer_class = RecruitmentSerializer
 
@@ -51,6 +53,7 @@ class RecruitmentView(ListAPIView):
 
 
 class RecruitmentDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get(self, request, recruitment_id):
         recruitment = get_object_or_404(Recruitments, id=recruitment_id)
@@ -90,8 +93,8 @@ class RecruitmentDetailView(APIView):
 
 
 class RecruitmentJoinView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    
     def get(self, request, recruitment_id):
         applicant = Applicant.objects.filter(recruitment_id=recruitment_id)
         serializer = RecruitmentJoinSerializer(applicant, many=True)
@@ -102,9 +105,11 @@ class RecruitmentJoinView(APIView):
         serializer = RecruitmentJoinSerializer(data=request.data)
 
         if recruitment.is_complete != 0:
-            return Response({"message": "마감된 지원입니다."}, status=status.HTTP_204_NO_CONTENT)
+            return Response({"message": "마감된 지원입니다."}, status=status.HTTP_400_BAD_REQUEST)
         if Applicant.objects.filter(recruitment=recruitment, user=request.user).exists() or request.user in recruitment.participant.all():
-            return Response({"message": "이미 지원하였습니다."}, status=status.HTTP_204_NO_CONTENT)
+            return Response({"message": "이미 지원하였습니다."}, status=status.HTTP_208_ALREADY_REPORTED)
+        if recruitment.user.id == request.user.id:
+            return Response({"message": "작성자는 지원할 수 없습니다."}, status=status.HTTP_400_BAD_REQUEST) 
 
         if serializer.is_valid():
             serializer.save(recruitment=recruitment, user=request.user)
