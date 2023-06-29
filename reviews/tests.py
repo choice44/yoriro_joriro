@@ -181,7 +181,7 @@ class ReviewReadTest(APITestCase):
 
 
     # 리뷰 전체 목록 페이지네이션(page_size=6)조회 성공
-    # view = ReviewFilterView, url name = "review_view", method = get
+    # view = ReviewFilterView, url name = "review_filter_view", method = get
     def test_pass_review_paginated_list(self):
         response = self.client.get(path=reverse("review_filter_view"))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -189,7 +189,7 @@ class ReviewReadTest(APITestCase):
         
     
     # 리뷰 관광지 목록 페이지네이션(page_size=6)조회 성공
-    # view = ReviewFilterView, url name = "review_view", method = get
+    # view = ReviewFilterView, url name = "review_filter_view", method = get
     def test_pass_review_fitered_12_list(self):
         response = self.client.get("/reviews/filter/", {"spot__type": "12"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -198,7 +198,7 @@ class ReviewReadTest(APITestCase):
         
         
     # 리뷰 맛집 목록 페이지네이션(page_size=6)조회 성공
-    # view = ReviewFilterView, url name = "review_view", method = get
+    # view = ReviewFilterView, url name = "review_filter_view", method = get
     def test_pass_review_fitered_39_list(self):
         response = self.client.get("/reviews/filter/", {"spot__type": "39"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
