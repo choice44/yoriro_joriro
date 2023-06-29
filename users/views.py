@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from rest_framework import status
+from rest_framework import permissions, status
 
 from django.shortcuts import redirect
 from django.http import JsonResponse
@@ -16,10 +16,16 @@ from allauth.socialaccount.providers.kakao import views as kakao_view
 from allauth.socialaccount.providers.naver import views as naver_view
 
 from users.models import User
-from users.serializers import UserSerializer, MyPageSerializer, LoginSerializer
+from users.serializers import (
+    UserSerializer,
+    MyPageSerializer,
+    MyPageUpdateSerializer,
+    LoginSerializer,
+)
 
 from json import JSONDecodeError
 
+import datetime
 import requests
 import os
 
@@ -39,6 +45,8 @@ class SignupView(APIView):
 
 # 팔로우
 class FollowView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
     def post(self, request, user_id):
         you = get_object_or_404(User, id=user_id)
         me = request.user
@@ -59,6 +67,8 @@ class FollowView(APIView):
 
 # 마이페이지
 class MyPageView(APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
     def get(self, request, user_id):
         user = get_object_or_404(User, id=user_id)
         serializer = MyPageSerializer(user)
@@ -68,7 +78,7 @@ class MyPageView(APIView):
     def put(self, request, user_id):
         user = get_object_or_404(User, id=user_id)
         if request.user == user:
-            serializer = UserSerializer(user, data=request.data, partial=True)
+            serializer = MyPageUpdateSerializer(user, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response({"message": "마이페이지 수정 완료!"}, status=status.HTTP_200_OK)
@@ -358,8 +368,28 @@ def naver_callback(request):
         headers={"Authorization": f"Bearer {access_token}"},
     )
     profile_json = profile_request.json()
+    print(profile_json)
 
-    email = profile_json.get("response").get("email")
+    profile_data = profile_json.get("response")
+
+    email = profile_data.get("email")
+    nickname = profile_data.get("nickname", None)
+    gender = profile_data.get("gender", None)
+    birthday = profile_data.get("birthday", None)
+    birthyear = profile_data.get("birthyear", None)
+
+    if birthday and birthyear:
+        current_date = datetime.datetime.now().date()
+        birth_date = datetime.datetime.strptime(birthday, "%m-%d").date()
+        birth_date = birth_date.replace(year=current_date.year)
+
+        if current_date < birth_date:  # 올해 생일이 지나지 않았을 경우
+            age = current_date.year - int(birthyear) - 1
+        else:  # 올해 생일이 지났을 경우
+            age = current_date.year - int(birthyear)
+
+    else:
+        age = None
 
     if email is None:
         return JsonResponse(
@@ -408,6 +438,12 @@ def naver_callback(request):
             return JsonResponse({"err_msg": "회원가입이 실패했습니다."}, status=accept_status)
 
         user, created = User.objects.get_or_create(email=email)
+        if nickname:
+            user.nickname = nickname
+        user.gender = gender
+        user.age = age
+        user.save()
+
         refresh_token = LoginSerializer.get_token(user)
         access_token = refresh_token.access_token
         return Response(

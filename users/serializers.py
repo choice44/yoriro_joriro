@@ -32,15 +32,15 @@ class MyPageSerializer(serializers.ModelSerializer):
             "followers",
             "followings",
         )
-        
+
     def get_followings(self, obj):
-        followings_data = obj.followings.values('id', 'nickname', 'image', 'email')
+        followings_data = obj.followings.values("id", "nickname", "image", "email")
         return followings_data
-    
+
     def get_followers(self, obj):
-        followers_data = obj.followers.values('id', 'nickname', 'image', 'email')
+        followers_data = obj.followers.values("id", "nickname", "image", "email")
         return followers_data
-    
+
     def get_followers_count(self, obj):
         return obj.followers.count()
 
@@ -48,7 +48,30 @@ class MyPageSerializer(serializers.ModelSerializer):
         return obj.followings.count()
 
 
-# 회원가입, 마이페이지 수정
+# 마이페이지 수정
+class MyPageUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "area",
+            "nickname",
+            "image",
+            "bio",
+            "sigungu",
+            "gender",
+            "age",
+        )
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop("password", None)
+        user = super().update(instance, validated_data)
+        if password:
+            user.set_password(password)
+            user.save()
+        return user
+
+
+# 회원가입
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -59,14 +82,6 @@ class UserSerializer(serializers.ModelSerializer):
         password = user.password
         user.set_password(password)
         user.save()
-        return user
-
-    def update(self, instance, validated_data):
-        password = validated_data.pop('password', None)
-        user = super().update(instance, validated_data)
-        if password:
-            user.set_password(password)
-            user.save()
         return user
 
 
