@@ -23,6 +23,8 @@ class JoriroView(APIView):
 
         # 이미지, 배경, 모델 로드
         img = Image.open(instance.image)
+        # 3 채널로 변환
+        img = img.convert("RGB")
         background = np.array(Image.open(
             JoriroConfig.backgrounds[instance.place]))
         model = JoriroConfig.models[instance.model]
@@ -47,11 +49,14 @@ class JoriroView(APIView):
         if not os.path.exists(save_path):
             os.makedirs(save_path)
 
+        # 업로드한 파일에서 이름을 가져옴
+        file_name = str(instance.image).split("/")[-1].split(".")[0]
+
         # 결과물 저장
-        cv2.imwrite(save_path + str(instance.id) + ".jpg", result)
+        cv2.imwrite(save_path + file_name + "_result.jpg", result)
 
         # 모델에 결과물 경로 저장
-        instance.result = "/" + save_path + str(str(instance.id)) + ".jpg"
+        instance.result = "/" + save_path + file_name + "_result.jpg"
         instance.save()
 
         # 새 시리얼라이저 초기화
