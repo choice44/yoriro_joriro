@@ -53,10 +53,10 @@ class JoriroView(APIView):
         file_name = str(instance.image).split("/")[-1].split(".")[0]
 
         # 결과물 저장
-        cv2.imwrite(save_path + file_name + ".jpg", result)
+        cv2.imwrite(save_path + file_name + "_result.jpg", result)
 
         # 모델에 결과물 경로 저장
-        instance.result = "/" + save_path + file_name + ".jpg"
+        instance.result = "/" + save_path + file_name + "_result.jpg"
         instance.save()
 
         # 새 시리얼라이저 초기화
