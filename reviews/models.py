@@ -1,6 +1,7 @@
 from django.db import models
 from users.models import User
 from spots.models import Spot
+from django.urls import reverse
 
 class Review(models.Model):
     RATE_CHOICES = (
@@ -25,4 +26,7 @@ class Review(models.Model):
     
     def __str__(self):
         return self.title
+    
+    def get_absolute_url(self):
+        return reverse('review_detail_view', kwargs={"review_id":self.id})
     

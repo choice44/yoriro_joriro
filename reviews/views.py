@@ -10,6 +10,7 @@ from reviews.serializers import (
     ReviewUpdateSerializer,
     ReviewCreateSerializer
 )
+from rest_framework.filters import SearchFilter
 
 
 # reviews/filter/
@@ -19,8 +20,9 @@ class ReviewFilterView(ListAPIView):
     """
     queryset = Review.objects.all().order_by("-created_at")
     serializer_class = ReviewListSerializer
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ["spot__type", "spot__area", "spot__sigungu"]
+    search_fields = ["spot__id",]
 
     def get_serializer_context(self):
         return {
