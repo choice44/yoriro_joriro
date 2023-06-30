@@ -9,9 +9,9 @@ from routes.serializers import (
     RouteCreateSerializer,
     RouteDetailSerializer,
     CommentSerializer,
-    CommentCreateSerializer
+    CommentCreateSerializer,
+    SpotCreateSerializer
 )
-from spots.serializers import SpotSerializer
 
 
 class RouteView(ListAPIView):
@@ -49,7 +49,7 @@ class SpotCreateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        serializer = SpotSerializer(data=request.data)
+        serializer = SpotCreateSerializer(data=request.data)
 
         # 유저가 기입한 정보가 유효하지 않을 때
         if not serializer.is_valid():
