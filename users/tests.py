@@ -78,6 +78,31 @@ class UserTest(APITestCase):
         self.assertEqual(response.data["message"], "마이페이지 수정 완료!")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    # 다른 회원이 회원 수정을 시도할 때 실패하는 지
+    def test_mypage_put_forbidden(self):
+        access_token = self.client.post(reverse("token_obtain_pair"), self.data).data[
+            "access"
+        ]
+        user_id = self.user2.id
+
+        url = reverse("mypage_view", kwargs={"user_id": user_id})
+
+        updated_data = {
+            "nickname": "new_nickname",
+            "bio": "New bio",
+            "gender": "M",
+            "age": 30,
+        }
+
+        response = self.client.put(
+            url,
+            data=updated_data,
+            format="json",
+            HTTP_AUTHORIZATION=f"Bearer {access_token}",
+        )
+        self.assertEqual(response.data["message"], "권한이 없습니다.")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     # 회원 탈퇴 테스트
     def test_mypage_delete(self):
         access_token = self.client.post(reverse("token_obtain_pair"), self.data).data[
@@ -89,8 +114,26 @@ class UserTest(APITestCase):
             reverse("mypage_view", kwargs={"user_id": user_id}),
             HTTP_AUTHORIZATION=f"Bearer {access_token}",
         )
+
         self.assertEqual(response.data["message"], "회원 탈퇴 완료!")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    # 다른 회원이 회원 탈퇴를 시도할 때 실패하는 지
+    def test_mypage_delete_forbidden(self):
+        access_token = self.client.post(reverse("token_obtain_pair"), self.data).data[
+            "access"
+        ]
+        user_id = self.user2.id
+
+        url = reverse("mypage_view", kwargs={"user_id": user_id})
+
+        response = self.client.delete(
+            url,
+            HTTP_AUTHORIZATION=f"Bearer {access_token}",
+        )
+
+        self.assertEqual(response.data["message"], "권한이 없습니다.")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     # 마이페이지 수정 테스트 (로그인x)
     def test_mypage_put_unauthenticated(self):

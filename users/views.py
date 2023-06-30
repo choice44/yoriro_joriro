@@ -27,6 +27,7 @@ from json import JSONDecodeError
 
 import datetime
 import requests
+import uuid
 import os
 
 
@@ -95,14 +96,14 @@ class MyPageView(APIView):
             user.save()
             return Response({"message": "회원 탈퇴 완료!"}, status=status.HTTP_200_OK)
         else:
-            return Response({"message": "권한이 없습니다"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
 
 # 구글 로그인
 state = os.environ.get("STATE")
 BASE_URL = "http://localhost:8000/"
 GOOGLE_CALLBACK_URI = BASE_URL + "users/google/login/callback/"
-GOOGLE_REDIRECT_URI = "http://127.0.0.1:5500/users/googleauthcallback/index.html"
+GOOGLE_REDIRECT_URI = "http://localhost:5500/users/googleauthcallback/index.html"
 
 
 class GoogleLoginView(SocialLoginView):
@@ -132,30 +133,30 @@ def google_callback(request):
     )
 
     # json으로 변환 & 에러 부분 파싱
-    token_req_json = token_request.json()
-    error = token_req_json.get("error")
+    token_request_json = token_request.json()
+    error = token_request_json.get("error")
 
     # 에러 발생 시 종료
     if error is not None:
         raise JSONDecodeError(error)
 
     # 성공 시 access_token 가져오기
-    access_token = token_req_json.get("access_token")
+    access_token = token_request_json.get("access_token")
 
     # 가져온 access_token으로 이메일값을 구글에 요청
-    email_req = requests.get(
+    email_request = requests.get(
         f"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}"
     )
-    email_req_status = email_req.status_code
+    email_request_status = email_request.status_code
 
-    if email_req_status != 200:
+    if email_request_status != 200:
         return JsonResponse(
             {"err_msg": "이메일을 가져오지 못했습니다."}, status=status.HTTP_400_BAD_REQUEST
         )
 
     # 성공 시 이메일 가져오기
-    email_req_json = email_req.json()
-    email = email_req_json.get("email")
+    email_request_json = email_request.json()
+    email = email_request_json.get("email")
 
     # 전달받은 이메일, access_token, code를 바탕으로 회원가입/로그인
     try:
@@ -200,6 +201,7 @@ def google_callback(request):
             return JsonResponse({"err_msg": "회원가입이 실패했습니다."}, status=accept_status)
 
         user, created = User.objects.get_or_create(email=email)
+
         refresh_token = LoginSerializer.get_token(user)
         access_token = refresh_token.access_token
 
@@ -217,7 +219,7 @@ def google_callback(request):
 
 # 카카오 로그인
 KAKAO_CALLBACK_URI = BASE_URL + "users/kakao/login/callback/"
-KAKAO_REDIRECT_URI = "http://127.0.0.1:5500/users/kakaoauthcallback/index.html"
+KAKAO_REDIRECT_URI = "http://localhost:5500/users/kakaoauthcallback/index.html"
 
 
 class KakaoLoginView(SocialLoginView):
@@ -244,6 +246,7 @@ def kakao_callback(request):
         f"https://kauth.kakao.com/oauth/token?grant_type=authorization_code&client_id={client_id}&redirect_uri={KAKAO_REDIRECT_URI}&code={code}"
     )
     token_response_json = token_request.json()
+
     # 에러 발생 시 중단
     error = token_response_json.get("error", None)
     if error is not None:
@@ -251,6 +254,7 @@ def kakao_callback(request):
 
     access_token = token_response_json.get("access_token")
 
+    # access token으로 카카오 프로필 요청
     profile_request = requests.post(
         "https://kapi.kakao.com/v2/user/me",
         headers={"Authorization": f"Bearer {access_token}"},
@@ -258,7 +262,22 @@ def kakao_callback(request):
     profile_json = profile_request.json()
 
     kakao_account = profile_json.get("kakao_account")
-    email = kakao_account.get("email", None)  # 이메일!
+    email = kakao_account.get("email", None)
+    nickname = kakao_account.get("profile", {}).get("nickname", None)
+    gender = kakao_account.get("gender", None)
+    age_range = kakao_account.get("age_range", None)
+
+    if gender:
+        if gender == "male":
+            gender = "M"
+        elif gender == "female":
+            gender = "F"
+        else:
+            gender = None
+
+    if age_range:
+        age_min, age_max = age_range.split("~")
+        age = int(age_min)
 
     # 이메일 없으면 오류 => 카카오톡 최신 버전에서는 이메일 없이 가입 가능해서 추후 수정해야함
     if email is None:
@@ -308,8 +327,17 @@ def kakao_callback(request):
             return JsonResponse({"err_msg": "회원가입이 실패했습니다."}, status=accept_status)
 
         user, created = User.objects.get_or_create(email=email)
+        if nickname:
+            user.nickname = nickname
+        else:
+            user.nickname = f"kakao_user{uuid.uuid4().hex[:8]}"
+        user.gender = gender if gender else ""
+        user.age = age if age else None
+        user.save()
+
         refresh_token = LoginSerializer.get_token(user)
         access_token = refresh_token.access_token
+
         return Response(
             {"refresh": str(refresh_token), "access": str(access_token)},
             status=status.HTTP_201_CREATED,
@@ -354,13 +382,12 @@ def naver_callback(request):
     )
     token_response_json = token_request.json()
 
+    # 에러 발생 시 중단
     error = token_response_json.get("error", None)
     if error is not None:
         raise JSONDecodeError(error)
 
     access_token = token_response_json.get("access_token")
-
-    # return JsonResponse({"access_token":access_token})
 
     # access token으로 네이버 프로필 요청
     profile_request = requests.post(
@@ -368,7 +395,6 @@ def naver_callback(request):
         headers={"Authorization": f"Bearer {access_token}"},
     )
     profile_json = profile_request.json()
-    print(profile_json)
 
     profile_data = profile_json.get("response")
 
@@ -440,7 +466,9 @@ def naver_callback(request):
         user, created = User.objects.get_or_create(email=email)
         if nickname:
             user.nickname = nickname
-        user.gender = gender
+        else:
+            user.nickname = f"naver_user{uuid.uuid4().hex[:8]}"
+        user.gender = gender if gender else ""
         user.age = age
         user.save()
 
