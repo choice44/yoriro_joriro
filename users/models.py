@@ -37,7 +37,9 @@ class User(AbstractBaseUser):
         max_length=255,
         unique=True,
     )
-    nickname = models.CharField(verbose_name="닉네임", max_length=50, blank=False)
+    nickname = models.CharField(
+        verbose_name="닉네임", max_length=50, blank=False, unique=True
+    )
     image = models.ImageField(upload_to="users", blank=True)
     bio = models.CharField(verbose_name="자기소개", max_length=100, blank=True)
     sigungu = models.IntegerField(verbose_name="시군구", null=True, blank=True)
