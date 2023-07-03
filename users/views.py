@@ -170,12 +170,7 @@ def google_callback(request):
         )
 
     profile_json = profile_request.json()
-    nickname = profile_json.get("name", None)
-
-    if nickname:
-        nickname = nickname
-    else:
-        nickname = f"google_user{uuid.uuid4().hex[:8]}"
+    nickname = profile_json.get("name", f"google_user{uuid.uuid4().hex[:8]}")
 
     # 전달받은 이메일, access_token, code를 바탕으로 회원가입/로그인
     try:
@@ -287,14 +282,11 @@ def kakao_callback(request):
 
     kakao_account = profile_json.get("kakao_account")
     email = kakao_account.get("email", None)
-    nickname = kakao_account.get("profile", {}).get("nickname", None)
+    nickname = kakao_account.get("profile", {}).get(
+        "nickname", f"kakao_user{uuid.uuid4().hex[:8]}"
+    )
     gender = kakao_account.get("gender", None)
     age_range = kakao_account.get("age_range", None)
-
-    if nickname:
-        nickname = nickname
-    else:
-        nickname = f"kakao_user{uuid.uuid4().hex[:8]}"
 
     if gender:
         if gender == "male":
@@ -430,15 +422,10 @@ def naver_callback(request):
     profile_data = profile_json.get("response")
 
     email = profile_data.get("email")
-    nickname = profile_data.get("nickname", None)
+    nickname = profile_data.get("nickname", f"kakao_user{uuid.uuid4().hex[:8]}")
     gender = profile_data.get("gender", None)
     birthday = profile_data.get("birthday", None)
     birthyear = profile_data.get("birthyear", None)
-
-    if nickname:
-        nickname = nickname
-    else:
-        nickname = f"naver_user{uuid.uuid4().hex[:8]}"
 
     if birthday and birthyear:
         current_date = datetime.datetime.now().date()
