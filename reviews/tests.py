@@ -311,4 +311,91 @@ class ReviewDeleteTest(APITestCase):
             self.assertEqual(response.status_code, 404)
 
 
-                        
+# view = LikeView, url name = "review_like_view", method = post
+class LikeTest(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.faker = Faker()
+        cls.user_data = {"email": "test@test.com", "password": "Test1234!"}
+        cls.area = Area.objects.create(
+                name=cls.faker.city(),
+                id=random.choice([1, 2, 3, 4, 5, 6, 7, 8, 31, 32, 33, 34, 35, 36, 37, 38, 39])
+                )
+        cls.spot = Spot.objects.create(
+                type=random.choice([12, 39]),
+                area=cls.area,
+                title=cls.faker.word(), 
+                mapx=cls.faker.longitude(), 
+                mapy=cls.faker.latitude()
+                )
+        cls.review_data = {"title": "test Title", "content": "test content", "rate": random.randint(1,5), "spot": cls.spot, "visited_date": cls.faker.date()}
+        cls.user = User.objects.create_user("test@test.com", "test_nickname", "Test1234!")
+        cls.review = Review.objects.create(**cls.review_data, user=cls.user)
+        
+        cls.viewers_data = []
+        cls.viewers = []
+        for i in range(10):
+            cls.viewer_data = {
+                "email": f"{cls.faker.unique.email()}",
+                "password": f"{cls.faker.word()}"
+            }
+            cls.viewers_data.append(cls.viewer_data)
+            cls.viewer = User.objects.create(**cls.viewer_data, nickname=cls.faker.unique.name())
+            cls.viewer.set_password(cls.viewer_data["password"])
+            cls.viewer.save()
+            cls.viewers.append(cls.viewer)                    
+
+    def setUp(self):
+        self.user_token = self.client.post(
+            reverse("token_obtain_pair"), self.user_data
+        ).data["access"]
+        self.viewer_tokens = []
+        for i in range(10):
+            self.viewer_tokens.append(self.client.post(
+            reverse("token_obtain_pair"), self.viewers_data[i]
+            ).data["access"])
+
+    # 좋아요 성공
+    def test_pass_like_review(self):
+        
+        # 좋아요
+        for i in range(10):
+            response = self.client.post(
+                path=reverse("review_like_view", kwargs={"review_id": 1}),
+                HTTP_AUTHORIZATION=f"Bearer {self.viewer_tokens[i]}",
+            )
+            serializer = ReviewDetailSerializer(self.review).data
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.data, {'message': "좋아요를 눌렀습니다."})
+            self.assertEqual(serializer["like_count"], i+1)
+        
+        # 좋아요 취소
+        for i in range(10):
+            response = self.client.post(
+                path=reverse("review_like_view", kwargs={"review_id": 1}),
+                HTTP_AUTHORIZATION=f"Bearer {self.viewer_tokens[i]}",
+            )
+            serializer = ReviewDetailSerializer(self.review).data
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.data, {'message': "좋아요를 취소했습니다."})
+            self.assertEqual(serializer["like_count"], 9-i)
+    
+    
+    # 로그인 하지 않고 리뷰 좋아요 실패(401_UNAUTHORIZED)
+    def test_fail_like_review_if_not_logged_in(self):
+        for i in range(10):
+            url = reverse("review_like_view", kwargs={"review_id": 1})
+            response = self.client.post(url)
+            self.assertEqual(response.status_code, 401)
+
+
+    # 없는 리뷰 좋아요 실패(404_NOT_FOUND)
+    def test_fail_like_review_if_not_exist(self):
+        Review.objects.filter(id=1).delete()
+        
+        for i in range(10):    
+            response = self.client.post(
+                path = reverse("review_like_view", kwargs={"review_id": 1}),
+                HTTP_AUTHORIZATION = f"Bearer {self.user_token}"
+            )
+            self.assertEqual(response.status_code, 404)
