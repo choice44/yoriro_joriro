@@ -183,7 +183,7 @@ def google_callback(request):
         # 있는데 구글계정이 아니어도 에러
         if social_user.provider != "google":
             return JsonResponse(
-                {"err_msg": "일치하는 구글 계정이 없습니다."},
+                {"err_msg": "이미 동일한 이메일로 가입한 다른 소셜 계정이 있습니다."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -318,7 +318,7 @@ def kakao_callback(request):
         # 있는데 카카오계정이 아니어도 에러
         if social_user.provider != "kakao":
             return JsonResponse(
-                {"err_msg": "일치하는 카카오 계정이 없습니다."},
+                {"err_msg": "이미 동일한 이메일로 가입한 다른 소셜 계정이 있습니다."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -453,7 +453,7 @@ def naver_callback(request):
         # 있는데 네이버계정이 아니어도 에러
         if social_user.provider != "naver":
             return JsonResponse(
-                {"err_msg": "일치하는 네이버 계정이 없습니다."},
+                {"err_msg": "이미 동일한 이메일로 가입한 다른 소셜 계정이 있습니다."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
