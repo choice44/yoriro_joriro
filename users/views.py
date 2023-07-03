@@ -159,6 +159,20 @@ def google_callback(request):
     email_request_json = email_request.json()
     email = email_request_json.get("email")
 
+    profile_request = requests.get(
+        f"https://www.googleapis.com/oauth2/v1/userinfo?access_token={access_token}"
+    )
+    profile_request_status = profile_request.status_code
+
+    if profile_request_status != 200:
+        return JsonResponse(
+            {"err_msg": "프로필 정보를 가져오지 못했습니다."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    profile_json = profile_request.json()
+    nickname = profile_json.get("name", f"google_user{uuid.uuid4().hex[:8]}")
+
     # 전달받은 이메일, access_token, code를 바탕으로 회원가입/로그인
     try:
         # 전달받은 이메일로 등록된 유저가 있는지 탐색
@@ -170,7 +184,7 @@ def google_callback(request):
         # 있는데 구글계정이 아니어도 에러
         if social_user.provider != "google":
             return JsonResponse(
-                {"err_msg": "일치하는 구글 계정이 없습니다."},
+                {"err_msg": "이미 동일한 이메일로 가입한 다른 소셜 계정이 있습니다."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -204,6 +218,11 @@ def google_callback(request):
             return JsonResponse({"err_msg": "회원가입이 실패했습니다."}, status=accept_status)
 
         user, created = User.objects.get_or_create(email=email)
+        if User.objects.filter(nickname=nickname):
+            user.nickname = nickname + uuid.uuid4().hex[:8]
+        else:
+            user.nickname = nickname
+        user.save()
 
         refresh_token = LoginSerializer.get_token(user)
         access_token = refresh_token.access_token
@@ -266,14 +285,11 @@ def kakao_callback(request):
 
     kakao_account = profile_json.get("kakao_account")
     email = kakao_account.get("email", None)
-    nickname = kakao_account.get("profile", {}).get("nickname", None)
+    nickname = kakao_account.get("profile", {}).get(
+        "nickname", f"kakao_user{uuid.uuid4().hex[:8]}"
+    )
     gender = kakao_account.get("gender", None)
     age_range = kakao_account.get("age_range", None)
-
-    if nickname:
-        nickname = nickname
-    else:
-        nickname = f"kakao_user{uuid.uuid4().hex[:8]}"
 
     if gender:
         if gender == "male":
@@ -305,7 +321,7 @@ def kakao_callback(request):
         # 있는데 카카오계정이 아니어도 에러
         if social_user.provider != "kakao":
             return JsonResponse(
-                {"err_msg": "일치하는 카카오 계정이 없습니다."},
+                {"err_msg": "이미 동일한 이메일로 가입한 다른 소셜 계정이 있습니다."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -410,15 +426,10 @@ def naver_callback(request):
     profile_data = profile_json.get("response")
 
     email = profile_data.get("email")
-    nickname = profile_data.get("nickname", None)
+    nickname = profile_data.get("nickname", f"naver_user{uuid.uuid4().hex[:8]}")
     gender = profile_data.get("gender", None)
     birthday = profile_data.get("birthday", None)
     birthyear = profile_data.get("birthyear", None)
-
-    if nickname:
-        nickname = nickname
-    else:
-        nickname = f"naver_user{uuid.uuid4().hex[:8]}"
 
     if birthday and birthyear:
         current_date = datetime.datetime.now().date()
@@ -446,7 +457,7 @@ def naver_callback(request):
         # 있는데 네이버계정이 아니어도 에러
         if social_user.provider != "naver":
             return JsonResponse(
-                {"err_msg": "일치하는 네이버 계정이 없습니다."},
+                {"err_msg": "이미 동일한 이메일로 가입한 다른 소셜 계정이 있습니다."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

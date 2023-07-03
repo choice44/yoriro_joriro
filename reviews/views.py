@@ -2,7 +2,6 @@ from rest_framework.views import APIView
 from rest_framework.generics import get_object_or_404, ListAPIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from django_filters.rest_framework import DjangoFilterBackend
 from reviews.models import Review
 from reviews.serializers import (
     ReviewListSerializer,
@@ -11,17 +10,18 @@ from reviews.serializers import (
     ReviewCreateSerializer
 )
 from rest_framework.filters import SearchFilter
+from django.db.models import Count
+from spots.core.pagination import CustomPagination
 
 
 # reviews/filter/
 class ReviewFilterView(ListAPIView):
     """
-    타입/지역별 리뷰 목록 조회
+    장소별 리뷰 목록 조회
     """
     queryset = Review.objects.all().order_by("-created_at")
     serializer_class = ReviewListSerializer
-    filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ["spot__type", "spot__area", "spot__sigungu"]
+    filter_backends = [SearchFilter]
     search_fields = ["spot__id",]
 
     def get_serializer_context(self):
@@ -34,16 +34,48 @@ class ReviewFilterView(ListAPIView):
 
 # reviews/
 class ReviewView(APIView):
-    # 로그인한 사람은 리뷰 작성 가능. 아니면 리뷰 전체 목록 조회만 가능.
+    # 로그인한 사람은 리뷰 작성 가능. 아니면 리뷰 목록 조회만 가능.
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = CustomPagination
     """
-    리뷰 전체 목록 조회
+    타입별/순서별 리뷰 목록 조회
     """
 
     def get(self, request):
-        reviews = Review.objects.all().order_by("-created_at")
-        serializer = ReviewListSerializer(reviews, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        ordered_by = request.query_params.get("order", None)
+        filtered_by = request.query_params.get("type", None)
+            
+        if ordered_by == "like_count" and filtered_by == "12":
+            reviews = Review.objects.filter(spot__type=12).annotate(
+                like_count=Count("likes")
+            ).order_by("-like_count")
+            
+        elif ordered_by is None and filtered_by == "12":
+            reviews = Review.objects.filter(spot__type=12).order_by("-created_at")
+                    
+        elif ordered_by == "like_count" and filtered_by == "39":
+            reviews = Review.objects.filter(spot__type=39).annotate(
+                like_count=Count("likes")
+            ).order_by("-like_count")
+        
+        elif ordered_by is None and filtered_by == "39":
+            reviews = Review.objects.filter(spot__type=39).order_by("-created_at")
+
+        elif ordered_by == "like_count" and filtered_by is None:
+            reviews = Review.objects.annotate(
+                like_count=Count("likes")
+            ).order_by("-like_count")
+        
+        else:
+            reviews = Review.objects.order_by("-created_at")
+            
+        paginator = self.pagination_class()
+        paginated_reviews = paginator.paginate_queryset(reviews, request)
+
+        serializer = ReviewListSerializer(paginated_reviews, many=True)
+        
+        return paginator.get_paginated_response(serializer.data)
+    
 
     """
     리뷰 작성
