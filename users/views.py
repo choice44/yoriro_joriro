@@ -422,7 +422,7 @@ def naver_callback(request):
     profile_data = profile_json.get("response")
 
     email = profile_data.get("email")
-    nickname = profile_data.get("nickname", f"kakao_user{uuid.uuid4().hex[:8]}")
+    nickname = profile_data.get("nickname", f"naver_user{uuid.uuid4().hex[:8]}")
     gender = profile_data.get("gender", None)
     birthday = profile_data.get("birthday", None)
     birthyear = profile_data.get("birthyear", None)
