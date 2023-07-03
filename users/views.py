@@ -270,6 +270,11 @@ def kakao_callback(request):
     gender = kakao_account.get("gender", None)
     age_range = kakao_account.get("age_range", None)
 
+    if nickname:
+        nickname = nickname
+    else:
+        nickname = f"kakao_user{uuid.uuid4().hex[:8]}"
+
     if gender:
         if gender == "male":
             gender = "M"
@@ -281,6 +286,8 @@ def kakao_callback(request):
     if age_range:
         age_min, age_max = age_range.split("~")
         age = int(age_min)
+    else:
+        age = None
 
     # 이메일 없으면 오류 => 카카오톡 최신 버전에서는 이메일 없이 가입 가능해서 추후 수정해야함
     if email is None:
@@ -332,10 +339,10 @@ def kakao_callback(request):
             return JsonResponse({"err_msg": "회원가입이 실패했습니다."}, status=accept_status)
 
         user, created = User.objects.get_or_create(email=email)
-        if nickname:
-            user.nickname = nickname
+        if User.objects.filter(nickname=nickname):
+            user.nickname = nickname + uuid.uuid4().hex[:8]
         else:
-            user.nickname = f"kakao_user{uuid.uuid4().hex[:8]}"
+            user.nickname = nickname
         user.gender = gender if gender else ""
         user.age = age if age else None
         user.save()
@@ -408,16 +415,19 @@ def naver_callback(request):
     birthday = profile_data.get("birthday", None)
     birthyear = profile_data.get("birthyear", None)
 
+    if nickname:
+        nickname = nickname
+    else:
+        nickname = f"naver_user{uuid.uuid4().hex[:8]}"
+
     if birthday and birthyear:
         current_date = datetime.datetime.now().date()
         birth_date = datetime.datetime.strptime(birthday, "%m-%d").date()
         birth_date = birth_date.replace(year=current_date.year)
-
         if current_date < birth_date:  # 올해 생일이 지나지 않았을 경우
             age = current_date.year - int(birthyear) - 1
         else:  # 올해 생일이 지났을 경우
             age = current_date.year - int(birthyear)
-
     else:
         age = None
 
@@ -470,12 +480,12 @@ def naver_callback(request):
             return JsonResponse({"err_msg": "회원가입이 실패했습니다."}, status=accept_status)
 
         user, created = User.objects.get_or_create(email=email)
-        if nickname:
-            user.nickname = nickname
+        if User.objects.filter(nickname=nickname):
+            user.nickname = nickname + uuid.uuid4().hex[:8]
         else:
-            user.nickname = f"naver_user{uuid.uuid4().hex[:8]}"
+            user.nickname = nickname
         user.gender = gender if gender else ""
-        user.age = age
+        user.age = age if age else None
         user.save()
 
         refresh_token = LoginSerializer.get_token(user)
