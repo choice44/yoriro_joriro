@@ -158,6 +158,25 @@ def google_callback(request):
     email_request_json = email_request.json()
     email = email_request_json.get("email")
 
+    profile_request = requests.get(
+        f"https://www.googleapis.com/oauth2/v1/userinfo?access_token={access_token}"
+    )
+    profile_request_status = profile_request.status_code
+
+    if profile_request_status != 200:
+        return JsonResponse(
+            {"err_msg": "프로필 정보를 가져오지 못했습니다."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    profile_json = profile_request.json()
+    nickname = profile_json.get("name", None)
+
+    if nickname:
+        nickname = nickname
+    else:
+        nickname = f"google_user{uuid.uuid4().hex[:8]}"
+
     # 전달받은 이메일, access_token, code를 바탕으로 회원가입/로그인
     try:
         # 전달받은 이메일로 등록된 유저가 있는지 탐색
@@ -201,6 +220,11 @@ def google_callback(request):
             return JsonResponse({"err_msg": "회원가입이 실패했습니다."}, status=accept_status)
 
         user, created = User.objects.get_or_create(email=email)
+        if User.objects.filter(nickname=nickname):
+            user.nickname = nickname + uuid.uuid4().hex[:8]
+        else:
+            user.nickname = nickname
+        user.save()
 
         refresh_token = LoginSerializer.get_token(user)
         access_token = refresh_token.access_token
