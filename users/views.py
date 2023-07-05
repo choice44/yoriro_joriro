@@ -22,6 +22,9 @@ from users.serializers import (
     MyPageUpdateSerializer,
     LoginSerializer,
 )
+from routes.serializers import RouteSerializer
+from reviews.serializers import ReviewListSerializer
+from recruitments.serializers import RecruitmentSerializer
 
 from json import JSONDecodeError
 
@@ -97,6 +100,30 @@ class MyPageView(APIView):
             return Response({"message": "회원 탈퇴 완료!"}, status=status.HTTP_200_OK)
         else:
             return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+
+
+@api_view(["GET"])
+def mypage_review(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    queryset = user.reviews.all()
+    serializer = ReviewListSerializer(queryset, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def mypage_route(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    queryset = user.routes.all()
+    serializer = RouteSerializer(queryset, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def mypage_recruitment(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    queryset = user.recruitments_set.all()
+    serializer = RecruitmentSerializer(queryset, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # 구글 로그인
