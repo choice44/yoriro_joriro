@@ -294,6 +294,16 @@ class ReviewReadTest(APITestCase):
             serializer = ReviewDetailSerializer(review).data
             for key, value in serializer.items():
                 self.assertEqual(response.data[key], value)
+                
+    
+    # 없는 리뷰 상세보기 실패(404_NOT_FOUND)
+    def test_fail_review_detail(self):
+        for i in range(10):
+            Review.objects.filter(id=i+1).delete()
+            response = self.client.get(
+                path = reverse("review_detail_view", kwargs={"review_id": i+1}),
+            )
+            self.assertEqual(response.status_code, 404)
 
 
 # view = ReviewDetailView, url name = "review_detail_view", method = delete
@@ -690,4 +700,16 @@ class ReviewUpdateTest(APITestCase):
                 HTTP_AUTHORIZATION = f"Bearer {self.another_user_token}"
             )
             self.assertEqual(response.status_code, 403)
-            
+    
+    
+    # 없는 리뷰 수정 실패(404_NOT_FOUND)
+    def test_fail_update_review_if_not_exist(self):
+        for i in range(10):
+            Review.objects.filter(id=i+1).delete()
+            response = self.client.put(
+                path = reverse("review_detail_view", kwargs={"review_id": i+1}),
+                data=self.new_reviews_data[i],
+                HTTP_AUTHORIZATION=f"Bearer {self.access_token}",
+            )
+            self.assertEqual(response.status_code, 404)
+                    
