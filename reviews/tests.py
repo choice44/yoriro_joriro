@@ -423,6 +423,7 @@ class LikeTest(APITestCase):
             cls.viewer.save()
             cls.viewers.append(cls.viewer)                    
 
+
     def setUp(self):
         self.user_token = self.client.post(
             reverse("token_obtain_pair"), self.user_data
@@ -535,9 +536,18 @@ class ReviewUpdateTest(APITestCase):
                 "rate": random.randint(1,5)
                 })
 
+
     def setUp(self):
         self.access_token = self.client.post(reverse("token_obtain_pair"), self.user_data).data["access"]
         self.another_user_token = self.client.post(reverse("token_obtain_pair"), self.another_user_data).data["access"]    
+
+    
+    # 테스트 후 이미지 파일 삭제하기
+    def tearDown(self):
+        for review in Review.objects.all():
+            review.image.delete()
+            review.delete()
+            
     
     # 리뷰 수정 성공(NOT NULL(title, content))
     def test_pass_update_review(self):
@@ -568,6 +578,99 @@ class ReviewUpdateTest(APITestCase):
             self.assertEqual(response.data[1]["content"], serializer["content"])
             self.assertEqual(response.data[1]["visited_date"], serializer["visited_date"])
             self.assertEqual(response.data[1]["rate"], serializer["rate"])
+            
+    
+    # 이미지가 없던 리뷰에 이미지 추가해서 수정 성공
+    def test_pass_update_review_add_image(self):
+        for i in range(10):
+            temp_file = tempfile.NamedTemporaryFile()  # 임시 파일 생성
+            temp_file.name = f"image{i}.png"  # 임시 파일 이름 지정
+            image_file = get_temporary_image(temp_file)  # 맨 위의 함수에 넣어서 이미지 파일을 받아온다.
+            image_file.seek(0)  # 이미지의 첫번째 프레임을 받아온다. 그냥 파일이기 때문에 첫번째 프레임을 받아오는 과정 필요.
+            
+            self.new_reviews_data[i]["image"] = temp_file
+            
+            url = self.reviews[i].get_absolute_url()
+            response = self.client.put(
+                path=url, 
+                data=encode_multipart(data=self.new_reviews_data[i], boundary=BOUNDARY),
+                content_type=MULTIPART_CONTENT,
+                HTTP_AUTHORIZATION=f"Bearer {self.access_token}",
+                )
+            
+            # 이미지 추가하기 리뷰 수정 성공(200_OK)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            
+            updated_review = Review.objects.create(
+                user=self.user, 
+                title=self.new_reviews_data[i]["title"], 
+                content=self.new_reviews_data[i]["content"],
+                visited_date=self.new_reviews_data[i]["visited_date"],
+                rate=self.new_reviews_data[i]["rate"],
+                spot_id=self.reviews[i].spot.id,
+                image=f"review/images/{datetime.now().strftime('%Y/%m/')+temp_file.name}"
+                )
+            
+            
+            serializer = ReviewDetailSerializer(updated_review).data
+            
+            # 이미지 추가하기 리뷰 내용 수정 됐는지
+            self.assertEqual(response.data[1]["title"], serializer["title"])
+            self.assertEqual(response.data[1]["content"], serializer["content"])
+            self.assertEqual(response.data[1]["visited_date"], serializer["visited_date"])
+            self.assertEqual(response.data[1]["rate"], serializer["rate"])
+            self.assertEqual(str(response.data[1]["image"]), serializer["image"])
+
+
+    # 이미지 있는 리뷰 이미지 수정 성공
+    def test_pass_update_review_with_another_image(self):
+        for i in range(10):
+            temp_file = tempfile.NamedTemporaryFile()
+            temp_file.name = f"image{i}.png"
+            image_file = get_temporary_image(temp_file)
+            image_file.seek(0)
+            
+            old_review = Review.objects.get(id=i+1)
+            old_review.image = f"review/images/{datetime.now().strftime('%Y/%m/')+temp_file.name}"
+            old_review.save()
+
+        for i in range(10):
+            temp_file = tempfile.NamedTemporaryFile()
+            temp_file.name = f"image{i+10}.png"
+            image_file = get_temporary_image(temp_file)
+            image_file.seek(0)
+            
+            self.new_reviews_data[i]["image"] = temp_file
+            
+            url = self.reviews[i].get_absolute_url()
+            response = self.client.put(
+                path=url, 
+                data=encode_multipart(data=self.new_reviews_data[i], boundary=BOUNDARY),
+                content_type=MULTIPART_CONTENT,
+                HTTP_AUTHORIZATION=f"Bearer {self.access_token}",
+                )
+            
+            # 이미지 교체하기 리뷰 수정 성공(200_OK)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            
+            updated_review = Review.objects.create(
+                user=self.user, 
+                title=self.new_reviews_data[i]["title"], 
+                content=self.new_reviews_data[i]["content"],
+                visited_date=self.new_reviews_data[i]["visited_date"],
+                rate=self.new_reviews_data[i]["rate"],
+                spot_id=self.reviews[i].spot.id,
+                image=f"review/images/{datetime.now().strftime('%Y/%m/')+temp_file.name}"
+                )
+            
+            serializer = ReviewDetailSerializer(updated_review).data
+            
+            # 이미지 교체하기 리뷰 내용 수정 됐는지
+            self.assertEqual(response.data[1]["title"], serializer["title"])
+            self.assertEqual(response.data[1]["content"], serializer["content"])
+            self.assertEqual(response.data[1]["visited_date"], serializer["visited_date"])
+            self.assertEqual(response.data[1]["rate"], serializer["rate"])
+            self.assertEqual(str(response.data[1]["image"]), serializer["image"])
 
     
     # 로그인 안하고 리뷰 수정 실패(401_UNAUTHORIZED)
