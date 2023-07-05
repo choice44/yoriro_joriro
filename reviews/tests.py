@@ -10,7 +10,7 @@ from datetime import datetime
 from users.models import User
 from reviews.models import Review
 from spots.models import Spot, Area
-from reviews.serializers import ReviewDetailSerializer, ReviewListSerializer, ReviewCreateSerializer, ReviewUpdateSerializer
+from reviews.serializers import ReviewDetailSerializer
 
 
 def get_temporary_image(temp_file):
