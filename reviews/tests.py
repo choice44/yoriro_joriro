@@ -77,7 +77,7 @@ class ReviewCreateTest(APITestCase):
             review.delete()
 
 
-    # 게시글 작성 성공(NOT NULL(title, content, spot, rate, visited_date))
+    # 리뷰 작성 성공(NOT NULL(title, content, spot, rate, visited_date))
     def test_pass_create_review(self):
         for i in range(10):
 
@@ -146,6 +146,19 @@ class ReviewReadTest(APITestCase):
                 id=area_ids[i]
                 ))
             
+        cls.viewers_data = []
+        cls.viewers = []
+        for i in range(10):
+            cls.viewer_data = {
+                "email": f"{cls.faker.unique.email()}",
+                "password": f"{cls.faker.word()}"
+            }
+            cls.viewers_data.append(cls.viewer_data)
+            cls.viewer = User.objects.create(**cls.viewer_data, nickname=cls.faker.unique.name())
+            cls.viewer.set_password(cls.viewer_data["password"])
+            cls.viewer.save()
+            cls.viewers.append(cls.viewer)
+        
         for i in range(10):
             cls.user = User.objects.create(
                 email=cls.faker.unique.email(), 
@@ -171,6 +184,33 @@ class ReviewReadTest(APITestCase):
                 visited_date=cls.faker.date(),
                 rate=random.randint(1,5)
                 ))
+            
+            cls.like_viewers=[]
+            for j in range(i+1):
+                cls.like_viewers.append(cls.viewers[j])
+                
+            cls.reviews[i].likes.set(cls.like_viewers)
+     
+        cls.search_spot = Spot.objects.create(
+            type=random.choice([12, 39]),
+            area=cls.areas[random.randint(0, 16)],
+            sigungu=random.randint(1,25),
+            addr1=cls.faker.address(),
+            title=cls.faker.word(), 
+            mapx=cls.faker.longitude(), 
+            mapy=cls.faker.latitude()
+            )
+        
+        cls.spot_reviews=[]
+        for i in range(10):
+            cls.spot_reviews.append(Review.objects.create(
+                title=cls.faker.sentence(), 
+                content=cls.faker.text(), 
+                user=cls.user,
+                spot=cls.search_spot,
+                visited_date=cls.faker.date(),
+                rate=random.randint(1,5)
+                ))
 
 
     # 리뷰 전체 목록 페이지네이션(page_size=6)조회 성공
@@ -181,12 +221,15 @@ class ReviewReadTest(APITestCase):
         self.assertEqual(len(response.data["results"]), 6)
 
 
-    # # 특정 장소 리뷰 목록 조회 성공
-    # # view = ReviewFilterView, url name = "review_filter_view", method = get
-    # def test_pass_spot_review_list(self):
-    #     response = self.client.get("/reviews/filter/", {"search": "장소아이디"})
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(len(response.data["results"]), 6)
+    # 특정 장소 리뷰 목록 조회 성공
+    # view = ReviewFilterView, url name = "review_filter_view", method = get
+    def test_pass_spot_review_list(self):
+        response = self.client.get("/reviews/filter/", {"search": 11})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["results"]), 6)
+        self.assertEqual(response.data["count"], 10)
+        for i in range(len(response.data["results"])):
+            self.assertEqual(response.data["results"][i]["spot"]["id"], 11)
         
     
     # 리뷰 관광지 목록 조회 성공
@@ -205,7 +248,41 @@ class ReviewReadTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         for i in range(len(response.data["results"])):
             self.assertEqual(response.data["results"][i]["spot"]["type"], 39)
+            
+            
+    # 리뷰 좋아요순 목록 조회 성공
+    # view = ReviewView, url name = "review_view", method = get
+    def test_pass_review_ordered_by_like_count_list(self):
+        response = self.client.get("/reviews/", {"order": "like_count"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["results"]), 6)
+        for i in range(len(response.data["results"])):
+            self.assertEqual(response.data["results"][i]["like_count"], 10-i)
+            
 
+    # 리뷰 관광지 좋아요순 목록 조회 성공
+    # view = ReviewView, url name = "review_view", method = get
+    def test_pass_review_like_count_12_list(self):
+        response = self.client.get("/reviews/", {"order": "like_count", "type": "12"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        previous = 10
+        for i in range(len(response.data["results"])):
+            self.assertEqual(response.data["results"][i]["spot"]["type"], 12)
+            self.assertTrue(previous>=response.data["results"][i]["like_count"])
+            previous = response.data["results"][i]["like_count"]
+            
+            
+    # 리뷰 맛집 좋아요순 목록 조회 성공
+    # view = ReviewView, url name = "review_view", method = get
+    def test_pass_review_like_count_39_list(self):
+        response = self.client.get("/reviews/", {"order": "like_count", "type": "39"})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        previous = 10
+        for i in range(len(response.data["results"])):
+            self.assertEqual(response.data["results"][i]["spot"]["type"], 39)
+            self.assertTrue(previous>=response.data["results"][i]["like_count"])
+            previous = response.data["results"][i]["like_count"]
+            
 
     # 리뷰 상세 보기(10개 테스트) 성공
     # view = ReviewDetailView, url name = "review_detail_view", method = get
@@ -213,6 +290,7 @@ class ReviewReadTest(APITestCase):
         for review in self.reviews:
             url = review.get_absolute_url()
             response = self.client.get(url)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
             serializer = ReviewDetailSerializer(review).data
             for key, value in serializer.items():
                 self.assertEqual(response.data[key], value)
@@ -399,3 +477,114 @@ class LikeTest(APITestCase):
                 HTTP_AUTHORIZATION = f"Bearer {self.user_token}"
             )
             self.assertEqual(response.status_code, 404)
+
+
+# view = ReviewDetailView, url name = "review_detail_view", method = put
+class ReviewUpdateTest(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user_data = {"email": "test@test.com", "password": "Test1234!"}
+        cls.user = User.objects.create(email="test@test.com", password="Test1234!", nickname="test")
+        cls.user.set_password(cls.user_data["password"])
+        cls.user.save()
+        
+        cls.another_user_data = {"email": "else1@test.com", "password": "password"}
+        cls.another_user = User.objects.create(email="else1@test.com", password="password", nickname="someone")
+        cls.another_user.set_password("password")
+        cls.another_user.save()
+        
+        cls.faker = Faker()
+        
+        cls.areas=[]
+        area_ids=[1, 2, 3, 4, 5, 6, 7, 8, 31, 32, 33, 34, 35, 36, 37, 38, 39]
+        for i in range(17):
+            cls.areas.append(Area.objects.create(
+                name=cls.faker.city(),
+                id=area_ids[i]
+                ))
+            
+        cls.spots=[]
+        for i in range(10):
+            cls.spots.append(Spot.objects.create(
+                type=random.choice([12, 39]),
+                area=cls.areas[random.randint(0, 16)],
+                sigungu=random.randint(1,25),
+                addr1=cls.faker.address(),
+                title=cls.faker.word(), 
+                mapx=cls.faker.longitude(), 
+                mapy=cls.faker.latitude()
+                ))
+            
+        cls.reviews=[]
+        for i in range(10):
+            cls.reviews.append(Review.objects.create(
+                title=cls.faker.sentence(), 
+                content=cls.faker.text(), 
+                user=cls.user,
+                spot=cls.spots[random.randint(0, 9)],
+                visited_date=cls.faker.date(),
+                rate=random.randint(1,5)
+                ))
+        
+        cls.new_reviews_data=[]
+        for i in range(10):
+            cls.new_reviews_data.append({
+                "title": cls.faker.sentence(), 
+                "content": cls.faker.text(),
+                "visited_date": cls.faker.date(),
+                "rate": random.randint(1,5)
+                })
+
+    def setUp(self):
+        self.access_token = self.client.post(reverse("token_obtain_pair"), self.user_data).data["access"]
+        self.another_user_token = self.client.post(reverse("token_obtain_pair"), self.another_user_data).data["access"]    
+    
+    # 리뷰 수정 성공(NOT NULL(title, content))
+    def test_pass_update_review(self):
+        for i in range(10):
+            url = self.reviews[i].get_absolute_url()
+            response = self.client.put(
+                path=url, 
+                data=self.new_reviews_data[i],
+                HTTP_AUTHORIZATION=f"Bearer {self.access_token}",
+                )
+            
+            # 리뷰 수정 성공(200_OK)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            
+            updated_review = Review.objects.create(
+                user=self.user, 
+                title=self.new_reviews_data[i]["title"], 
+                content=self.new_reviews_data[i]["content"],
+                visited_date=self.new_reviews_data[i]["visited_date"],
+                rate=self.new_reviews_data[i]["rate"],
+                spot_id=self.reviews[i].spot.id
+                )
+            
+            serializer = ReviewDetailSerializer(updated_review).data
+            
+            # 리뷰 내용 수정 됐는지
+            self.assertEqual(response.data[1]["title"], serializer["title"])
+            self.assertEqual(response.data[1]["content"], serializer["content"])
+            self.assertEqual(response.data[1]["visited_date"], serializer["visited_date"])
+            self.assertEqual(response.data[1]["rate"], serializer["rate"])
+
+    
+    # 로그인 안하고 리뷰 수정 실패(401_UNAUTHORIZED)
+    def test_fail_update_review_if_not_logged_in(self):
+        for i in range(10):
+            url = reverse("review_detail_view", kwargs={"review_id": i+1})
+            response = self.client.put(url, data=self.new_reviews_data[i])
+            self.assertEqual(response.status_code, 401)
+    
+    
+    # 다른 사람의 리뷰 수정 실패(403_FORBIDDEN)
+    def test_fail_update_review_if_not_author(self):
+        for i in range(10):
+            response = self.client.put(
+                path = reverse("review_detail_view", kwargs={"review_id": i+1}),
+                data=self.new_reviews_data[i],
+                HTTP_AUTHORIZATION = f"Bearer {self.another_user_token}"
+            )
+            self.assertEqual(response.status_code, 403)
+            
