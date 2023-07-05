@@ -24,7 +24,7 @@ class RouteSpotSerializer(serializers.ModelSerializer):
 class SpotCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Spot
-        fields = ['id', 'type', 'title', 'mapx', 'mapy']
+        fields = ['id', 'type', 'title', 'mapx', 'mapy', 'addr1']
         
 
 # 여행경로 전체 조회
