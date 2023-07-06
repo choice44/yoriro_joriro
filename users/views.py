@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from rest_framework.generics import get_object_or_404
+from rest_framework.generics import get_object_or_404, ListAPIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import permissions, status
@@ -22,6 +22,9 @@ from users.serializers import (
     MyPageUpdateSerializer,
     LoginSerializer,
 )
+from routes.serializers import RouteSerializer
+from reviews.serializers import ReviewListSerializer
+from recruitments.serializers import RecruitmentSerializer
 
 from json import JSONDecodeError
 
@@ -97,6 +100,54 @@ class MyPageView(APIView):
             return Response({"message": "회원 탈퇴 완료!"}, status=status.HTTP_200_OK)
         else:
             return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+
+
+class MypageReviewsView(ListAPIView):
+    serializer_class = ReviewListSerializer
+
+    def get_serializer_context(self):
+        return {"request": None, "format": self.format_kwarg, "view": self}
+
+    def get_queryset(self):
+        user = get_object_or_404(User, id=self.user_id)
+        queryset = user.reviews.all().order_by("-created_at")
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        self.user_id = kwargs.get("user_id", None)
+        return super().get(request, *args, **kwargs)
+
+
+class MypageRoutesView(ListAPIView):
+    serializer_class = RouteSerializer
+
+    def get_serializer_context(self):
+        return {"request": None, "format": self.format_kwarg, "view": self}
+
+    def get_queryset(self):
+        user = get_object_or_404(User, id=self.user_id)
+        queryset = user.routes.all().order_by("-created_at")
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        self.user_id = kwargs.get("user_id", None)
+        return super().get(request, *args, **kwargs)
+
+
+class MypageRecruitmentsView(ListAPIView):
+    serializer_class = RecruitmentSerializer
+
+    def get_serializer_context(self):
+        return {"request": None, "format": self.format_kwarg, "view": self}
+
+    def get_queryset(self):
+        user = get_object_or_404(User, id=self.user_id)
+        queryset = user.recruitments_set.all().order_by("-created_at")
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        self.user_id = kwargs.get("user_id", None)
+        return super().get(request, *args, **kwargs)
 
 
 # 구글 로그인
