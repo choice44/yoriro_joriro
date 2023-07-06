@@ -24,11 +24,14 @@ class RecruitmentDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def get_user(self, obj):
-        return {"id":obj.user.id, "nickname":obj.user.nickname, "age":obj.user.age, "gender":obj.user.gender}
+        if obj.user.image:
+            return {"id": obj.user.id, "nickname": obj.user.nickname, "age":obj.user.age, "gender":obj.user.gender, "image": obj.user.image.url}
+        else:
+            return {"id": obj.user.id, "nickname": obj.user.nickname, "age":obj.user.age, "gender":obj.user.gender}
         
     def get_participant(self, obj):
         participant_data = obj.participant.values(
-            "id", 'nickname', "age", "gender")
+            "id", 'nickname', "age", "gender", "image")
         return participant_data
 
     def get_participant_now(self, obj):
@@ -55,4 +58,7 @@ class RecruitmentJoinSerializer(serializers.ModelSerializer):
         fields = ("id", "user", "appeal", "acceptence",)
 
     def get_user(self, obj):
-        return {"id": obj.user.id, "nickname": obj.user.nickname, "age": obj.user.age, "gender": obj.user.gender}
+        if obj.user.image:
+            return {"id": obj.user.id, "nickname": obj.user.nickname, "age":obj.user.age, "gender":obj.user.gender, "image": obj.user.image.url}
+        else:
+            return {"id": obj.user.id, "nickname": obj.user.nickname, "age":obj.user.age, "gender":obj.user.gender}
