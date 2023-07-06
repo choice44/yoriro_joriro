@@ -153,7 +153,7 @@ class ApplicantAcceptView(APIView):
                 return Response({"message": "이전에 처리한 지원자입니다."}, status=status.HTTP_208_ALREADY_REPORTED)
 
             if recruitment.is_complete != 0:
-                return Response({"message": "더이상 수락할수 없습니다."}, status=status.HTTP_208_ALREADY_REPORTED)
+                return Response({"message": "더이상 수락할수 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
 
             applicant.acceptence = 2
             applicant.save()
@@ -177,7 +177,7 @@ class ApplicantRejectView(APIView):
 
         if recruitment.user == request.user:
             if applicant.acceptence != 0:
-                return Response({"message": "이전에 처리한 지원자입니다."}, status=status.HTTP_204_NO_CONTENT)
+                return Response({"message": "이전에 처리한 지원자입니다."}, status=status.HTTP_208_ALREADY_REPORTED)
 
             applicant.acceptence = 1
             applicant.save()
