@@ -1,5 +1,5 @@
 from rest_framework.views import APIView
-from rest_framework.generics import get_object_or_404
+from rest_framework.generics import get_object_or_404, ListAPIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import permissions, status
@@ -22,6 +22,9 @@ from users.serializers import (
     MyPageUpdateSerializer,
     LoginSerializer,
 )
+from routes.serializers import RouteSerializer
+from reviews.serializers import ReviewListSerializer
+from recruitments.serializers import RecruitmentSerializer
 
 from json import JSONDecodeError
 
@@ -99,6 +102,54 @@ class MyPageView(APIView):
             return Response({"message": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
 
+class MypageReviewsView(ListAPIView):
+    serializer_class = ReviewListSerializer
+
+    def get_serializer_context(self):
+        return {"request": None, "format": self.format_kwarg, "view": self}
+
+    def get_queryset(self):
+        user = get_object_or_404(User, id=self.user_id)
+        queryset = user.reviews.all().order_by("-created_at")
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        self.user_id = kwargs.get("user_id", None)
+        return super().get(request, *args, **kwargs)
+
+
+class MypageRoutesView(ListAPIView):
+    serializer_class = RouteSerializer
+
+    def get_serializer_context(self):
+        return {"request": None, "format": self.format_kwarg, "view": self}
+
+    def get_queryset(self):
+        user = get_object_or_404(User, id=self.user_id)
+        queryset = user.routes.all().order_by("-created_at")
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        self.user_id = kwargs.get("user_id", None)
+        return super().get(request, *args, **kwargs)
+
+
+class MypageRecruitmentsView(ListAPIView):
+    serializer_class = RecruitmentSerializer
+
+    def get_serializer_context(self):
+        return {"request": None, "format": self.format_kwarg, "view": self}
+
+    def get_queryset(self):
+        user = get_object_or_404(User, id=self.user_id)
+        queryset = user.recruitments_set.all().order_by("-created_at")
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        self.user_id = kwargs.get("user_id", None)
+        return super().get(request, *args, **kwargs)
+
+
 # 구글 로그인
 state = os.environ.get("STATE")
 BASE_URL = "http://localhost:8000/"
@@ -158,6 +209,20 @@ def google_callback(request):
     email_request_json = email_request.json()
     email = email_request_json.get("email")
 
+    profile_request = requests.get(
+        f"https://www.googleapis.com/oauth2/v1/userinfo?access_token={access_token}"
+    )
+    profile_request_status = profile_request.status_code
+
+    if profile_request_status != 200:
+        return JsonResponse(
+            {"err_msg": "프로필 정보를 가져오지 못했습니다."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    profile_json = profile_request.json()
+    nickname = profile_json.get("name", f"google_user{uuid.uuid4().hex[:8]}")
+
     # 전달받은 이메일, access_token, code를 바탕으로 회원가입/로그인
     try:
         # 전달받은 이메일로 등록된 유저가 있는지 탐색
@@ -169,7 +234,7 @@ def google_callback(request):
         # 있는데 구글계정이 아니어도 에러
         if social_user.provider != "google":
             return JsonResponse(
-                {"err_msg": "일치하는 구글 계정이 없습니다."},
+                {"err_msg": "이미 동일한 이메일로 가입한 다른 소셜 계정이 있습니다."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -201,6 +266,11 @@ def google_callback(request):
             return JsonResponse({"err_msg": "회원가입이 실패했습니다."}, status=accept_status)
 
         user, created = User.objects.get_or_create(email=email)
+        if User.objects.filter(nickname=nickname):
+            user.nickname = nickname + uuid.uuid4().hex[:8]
+        else:
+            user.nickname = nickname
+        user.save()
 
         refresh_token = LoginSerializer.get_token(user)
         access_token = refresh_token.access_token
@@ -263,7 +333,9 @@ def kakao_callback(request):
 
     kakao_account = profile_json.get("kakao_account")
     email = kakao_account.get("email", None)
-    nickname = kakao_account.get("profile", {}).get("nickname", None)
+    nickname = kakao_account.get("profile", {}).get(
+        "nickname", f"kakao_user{uuid.uuid4().hex[:8]}"
+    )
     gender = kakao_account.get("gender", None)
     age_range = kakao_account.get("age_range", None)
 
@@ -278,6 +350,8 @@ def kakao_callback(request):
     if age_range:
         age_min, age_max = age_range.split("~")
         age = int(age_min)
+    else:
+        age = None
 
     # 이메일 없으면 오류 => 카카오톡 최신 버전에서는 이메일 없이 가입 가능해서 추후 수정해야함
     if email is None:
@@ -295,7 +369,7 @@ def kakao_callback(request):
         # 있는데 카카오계정이 아니어도 에러
         if social_user.provider != "kakao":
             return JsonResponse(
-                {"err_msg": "일치하는 카카오 계정이 없습니다."},
+                {"err_msg": "이미 동일한 이메일로 가입한 다른 소셜 계정이 있습니다."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -327,10 +401,10 @@ def kakao_callback(request):
             return JsonResponse({"err_msg": "회원가입이 실패했습니다."}, status=accept_status)
 
         user, created = User.objects.get_or_create(email=email)
-        if nickname:
-            user.nickname = nickname
+        if User.objects.filter(nickname=nickname):
+            user.nickname = nickname + uuid.uuid4().hex[:8]
         else:
-            user.nickname = f"kakao_user{uuid.uuid4().hex[:8]}"
+            user.nickname = nickname
         user.gender = gender if gender else ""
         user.age = age if age else None
         user.save()
@@ -399,7 +473,7 @@ def naver_callback(request):
     profile_data = profile_json.get("response")
 
     email = profile_data.get("email")
-    nickname = profile_data.get("nickname", None)
+    nickname = profile_data.get("nickname", f"naver_user{uuid.uuid4().hex[:8]}")
     gender = profile_data.get("gender", None)
     birthday = profile_data.get("birthday", None)
     birthyear = profile_data.get("birthyear", None)
@@ -408,12 +482,10 @@ def naver_callback(request):
         current_date = datetime.datetime.now().date()
         birth_date = datetime.datetime.strptime(birthday, "%m-%d").date()
         birth_date = birth_date.replace(year=current_date.year)
-
         if current_date < birth_date:  # 올해 생일이 지나지 않았을 경우
             age = current_date.year - int(birthyear) - 1
         else:  # 올해 생일이 지났을 경우
             age = current_date.year - int(birthyear)
-
     else:
         age = None
 
@@ -432,7 +504,7 @@ def naver_callback(request):
         # 있는데 네이버계정이 아니어도 에러
         if social_user.provider != "naver":
             return JsonResponse(
-                {"err_msg": "일치하는 네이버 계정이 없습니다."},
+                {"err_msg": "이미 동일한 이메일로 가입한 다른 소셜 계정이 있습니다."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -464,12 +536,12 @@ def naver_callback(request):
             return JsonResponse({"err_msg": "회원가입이 실패했습니다."}, status=accept_status)
 
         user, created = User.objects.get_or_create(email=email)
-        if nickname:
-            user.nickname = nickname
+        if User.objects.filter(nickname=nickname):
+            user.nickname = nickname + uuid.uuid4().hex[:8]
         else:
-            user.nickname = f"naver_user{uuid.uuid4().hex[:8]}"
+            user.nickname = nickname
         user.gender = gender if gender else ""
-        user.age = age
+        user.age = age if age else None
         user.save()
 
         refresh_token = LoginSerializer.get_token(user)

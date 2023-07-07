@@ -36,4 +36,19 @@ urlpatterns = [
         views.NaverLoginView.as_view(),
         name="naver_login_todjango",
     ),
+    path(
+        "mypage/<int:user_id>/reviews/",
+        views.MypageReviewsView.as_view(),
+        name="mypage_reviews",
+    ),
+    path(
+        "mypage/<int:user_id>/routes/",
+        views.MypageRoutesView.as_view(),
+        name="mypage_routes",
+    ),
+    path(
+        "mypage/<int:user_id>/recruitments/",
+        views.MypageRecruitmentsView.as_view(),
+        name="mypage_recruitments",
+    ),
 ]

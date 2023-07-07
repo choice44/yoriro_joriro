@@ -24,7 +24,7 @@ class RouteSpotSerializer(serializers.ModelSerializer):
 class SpotCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Spot
-        fields = ['id', 'type', 'title', 'mapx', 'mapy']
+        fields = ['id', 'type', 'title', 'mapx', 'mapy', 'addr1']
         
 
 # 여행경로 전체 조회
@@ -58,7 +58,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     # 유저 정보 가져오기
     def get_user(self, obj):
-        return {'id': obj.user.pk, 'nickname': obj.user.nickname}
+        return {'id': obj.user.pk, 'nickname': obj.user.nickname, 'image':obj.user.image.url if obj.user.image else None}
 
     class Meta:
         model = Comment
@@ -158,7 +158,7 @@ class RouteDetailSerializer(serializers.ModelSerializer):
     areas = RouteAreaSerializer(many=True)
 
     def get_user(self, obj):
-        return {'id': obj.user.pk, 'nickname': obj.user.nickname}
+        return {'id': obj.user.pk, 'nickname': obj.user.nickname, 'image':obj.user.image.url if obj.user.image else None}
 
     def get_comment_count(self, obj):
         return obj.comments.count()
