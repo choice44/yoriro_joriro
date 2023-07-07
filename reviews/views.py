@@ -48,7 +48,7 @@ class ReviewView(APIView):
         if ordered_by == "like_count" and filtered_by == "12":
             reviews = Review.objects.filter(spot__type=12).annotate(
                 like_count=Count("likes")
-            ).order_by("-like_count")
+            ).order_by("-like_count", "-created_at")
             
         elif ordered_by is None and filtered_by == "12":
             reviews = Review.objects.filter(spot__type=12).order_by("-created_at")
@@ -56,7 +56,7 @@ class ReviewView(APIView):
         elif ordered_by == "like_count" and filtered_by == "39":
             reviews = Review.objects.filter(spot__type=39).annotate(
                 like_count=Count("likes")
-            ).order_by("-like_count")
+            ).order_by("-like_count", "-created_at")
         
         elif ordered_by is None and filtered_by == "39":
             reviews = Review.objects.filter(spot__type=39).order_by("-created_at")
@@ -64,7 +64,7 @@ class ReviewView(APIView):
         elif ordered_by == "like_count" and filtered_by is None:
             reviews = Review.objects.annotate(
                 like_count=Count("likes")
-            ).order_by("-like_count")
+            ).order_by("-like_count", "-created_at")
         
         else:
             reviews = Review.objects.order_by("-created_at")
